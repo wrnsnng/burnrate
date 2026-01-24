@@ -79,7 +79,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem.button else { return }
 
         let title = viewModel.menubarTitle
-        button.title = "🔥 \(title)"
+        let emoji = viewModel.menubarEmoji
+        button.title = "\(emoji) \(title)"
     }
 
     @objc private func togglePopover() {
@@ -159,7 +160,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Settings"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 380, height: 320))
+        window.setContentSize(NSSize(width: 380, height: 400))
         window.center()
         window.isReleasedWhenClosed = false
 

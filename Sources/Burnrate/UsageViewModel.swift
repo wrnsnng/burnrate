@@ -46,6 +46,31 @@ final class UsageViewModel {
         }
     }
 
+    var menubarEmoji: String {
+        guard let limits = usageLimits else {
+            return "🤖"
+        }
+
+        // Use the displayed metric, or max of both if showing "both" or "icon only"
+        let percentage: Double
+        switch settingsService.menubarDisplay {
+        case .sevenDay:
+            percentage = limits.sevenDayUtilization
+        case .fiveHour:
+            percentage = limits.fiveHourUtilization
+        case .both, .iconOnly:
+            percentage = max(limits.fiveHourUtilization, limits.sevenDayUtilization)
+        }
+
+        if percentage >= 90 {
+            return "🚨"
+        } else if percentage >= 70 {
+            return "🔥"
+        } else {
+            return "🤖"
+        }
+    }
+
     func startAutoRefresh() {
         refresh()
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in

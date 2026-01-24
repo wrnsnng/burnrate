@@ -1,4 +1,5 @@
 import Foundation
+import ServiceManagement
 
 enum MenubarDisplay: String, CaseIterable, Identifiable {
     case sevenDay = "7-day usage"
@@ -14,6 +15,23 @@ final class SettingsService {
     var menubarDisplay: MenubarDisplay {
         didSet {
             UserDefaults.standard.set(menubarDisplay.rawValue, forKey: "menubarDisplay")
+        }
+    }
+
+    var launchAtStartup: Bool {
+        get {
+            SMAppService.mainApp.status == .enabled
+        }
+        set {
+            do {
+                if newValue {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+            } catch {
+                NSLog("[Settings] Failed to update launch at startup: \(error)")
+            }
         }
     }
 

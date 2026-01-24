@@ -21,7 +21,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle.fill")
                 }
         }
-        .frame(width: 380, height: 320)
+        .frame(width: 380, height: 400)
     }
 }
 
@@ -31,7 +31,16 @@ struct GeneralSettingsTab: View {
     @Bindable var settingsService: SettingsService
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: BurnrateTheme.spacingXL) {
+            // Startup section
+            SettingsSection(title: "Startup", icon: "power", iconColor: BurnrateTheme.statusGreen) {
+                SettingsToggle(
+                    title: "Launch at login",
+                    subtitle: "Automatically start Burnrate when you log in",
+                    isOn: $settingsService.launchAtStartup
+                )
+            }
+
             // Menubar display section
             SettingsSection(title: "Menubar display", icon: "menubar.rectangle") {
                 VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
@@ -46,7 +55,7 @@ struct GeneralSettingsTab: View {
                         }
                     }
 
-                    Text("Choose what to display next to the flame icon in your menubar.")
+                    Text("Choose what to display next to the icon in your menubar.")
                         .font(.system(size: 11, weight: .regular))
                         .foregroundStyle(BurnrateTheme.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -118,10 +127,10 @@ struct MenubarOptionRow: View {
 
     private func previewText(for option: MenubarDisplay) -> String {
         switch option {
-        case .sevenDay: return "🔥 72%"
-        case .fiveHour: return "🔥 35%"
-        case .both: return "🔥 35|72"
-        case .iconOnly: return "🔥"
+        case .sevenDay: return "🤖 72%"
+        case .fiveHour: return "🤖 35%"
+        case .both: return "🤖 35|72"
+        case .iconOnly: return "🤖"
         }
     }
 }
