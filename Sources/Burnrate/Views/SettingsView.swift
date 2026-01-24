@@ -21,6 +21,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle.fill")
                 }
         }
+        .padding(.top, BurnrateTheme.spacingMD)
         .frame(minWidth: 400, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
     }
 }
@@ -87,8 +88,7 @@ struct GeneralSettingsTab: View {
                     }
                 }
             }
-            .padding(BurnrateTheme.spacingXL)
-            .padding(.top, BurnrateTheme.spacingMD)
+            .padding(BurnrateTheme.spacingLG)
         }
     }
 }
@@ -341,8 +341,7 @@ struct AlertsSettingsTab: View {
                     }
                 }
             }
-            .padding(BurnrateTheme.spacingXL)
-            .padding(.top, BurnrateTheme.spacingMD)
+            .padding(BurnrateTheme.spacingLG)
         }
     }
 }
