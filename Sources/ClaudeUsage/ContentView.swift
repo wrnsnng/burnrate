@@ -3,6 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var viewModel: UsageViewModel
     let onQuit: () -> Void
+    let onShowAnalytics: () -> Void
+    let onShowSettings: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -19,6 +21,12 @@ struct ContentView: View {
                     ProgressView()
                         .scaleEffect(0.7)
                 }
+                Button(action: onShowSettings) {
+                    Image(systemName: "gear")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
             }
             .padding(.bottom, 12)
 
@@ -61,7 +69,9 @@ struct ContentView: View {
                     )
                 }
                 .padding(.vertical, 12)
+                .padding(.trailing, 4)
             }
+            .scrollIndicators(.never)
 
             Divider()
 
@@ -73,6 +83,10 @@ struct ContentView: View {
 
                 Button(action: { viewModel.refresh() }) {
                     Label("Refresh", systemImage: "arrow.clockwise")
+                }
+
+                Button(action: onShowAnalytics) {
+                    Label("Analytics", systemImage: "chart.line.uptrend.xyaxis")
                 }
 
                 Spacer()
@@ -118,6 +132,8 @@ struct ContentView: View {
             vm.isTokenExpired = false
             return vm
         }(),
-        onQuit: {}
+        onQuit: {},
+        onShowAnalytics: {},
+        onShowSettings: {}
     )
 }

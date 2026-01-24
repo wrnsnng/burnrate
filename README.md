@@ -2,14 +2,17 @@
 
 A macOS menubar app that displays your Claude Code usage statistics in real-time.
 
-![Claude Usage Screenshot](screenshot.png)
+Built by **Common Tools Co.**
 
 ## Features
 
 - **Real-time Usage Tracking**: Monitor your 5-hour, 7-day, and Opus utilization with visual progress bars
 - **Current Session Info**: See token count and message count for your active session
 - **Recent Sessions**: Quick access to your 8 most recent sessions with one-click resume
-- **Extra Usage Status**: Know if extra usage billing is enabled on your account
+- **Usage Alerts**: Get notified when usage crosses 80% or 90% thresholds
+- **Analytics Dashboard**: View historical usage trends with charts (24h, 7d, 30d)
+- **Customizable Menubar**: Choose what to display (5-hour %, 7-day %, both, or icon only)
+- **Settings Window**: Tabbed interface for General, Alerts, and About settings
 - **Auto-refresh**: Data updates every 60 seconds automatically
 
 ## Prerequisites
@@ -21,18 +24,16 @@ A macOS menubar app that displays your Claude Code usage statistics in real-time
 
 ### Option 1: Download Release (Recommended)
 
-Download the latest `Claude-Usage.zip` from [Releases](https://github.com/wrnsnng/claude-usage/releases), unzip, and move to Applications.
+Download the latest `ClaudeUsage.zip` from [Releases](https://github.com/wrnsnng/claude-usage/releases), unzip, and move to Applications.
 
 > **Note**: Since the app is not notarized, you'll need to right-click and select "Open" on first launch.
 
 ### Option 2: Build from Source
 
-#### SwiftUI Version (Recommended)
-
 ```bash
 # Clone the repository
 git clone https://github.com/wrnsnng/claude-usage.git
-cd claude-usage/ClaudeUsage
+cd claude-usage
 
 # Build and run
 swift build
@@ -42,85 +43,53 @@ swift run
 To create a distributable .app bundle:
 
 ```bash
-cd ClaudeUsage
-
 # Build release
 swift build -c release
 
 # Create app bundle
-APP_DIR="Claude Usage.app"
-mkdir -p "$APP_DIR/Contents/MacOS"
-mkdir -p "$APP_DIR/Contents/Resources"
-cp .build/release/ClaudeUsage "$APP_DIR/Contents/MacOS/"
-
-# Create Info.plist
-cat > "$APP_DIR/Contents/Info.plist" << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleName</key>
-    <string>Claude Usage</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.claudeusage.app</string>
-    <key>CFBundleVersion</key>
-    <string>1.0.0</string>
-    <key>CFBundleExecutable</key>
-    <string>ClaudeUsage</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>LSUIElement</key>
-    <true/>
-</dict>
-</plist>
-EOF
+mkdir -p "ClaudeUsage.app/Contents/MacOS"
+cp .build/release/ClaudeUsage "ClaudeUsage.app/Contents/MacOS/"
+cp Resources/Info.plist "ClaudeUsage.app/Contents/"
 
 # Zip for distribution
-zip -r "Claude-Usage.zip" "Claude Usage.app"
-```
-
-#### Python Version (Legacy)
-
-```bash
-cd claude-usage
-
-# Install dependencies
-pip3 install -r requirements.txt
-
-# Run
-python3 run.py
+zip -r "ClaudeUsage.zip" "ClaudeUsage.app"
 ```
 
 ## Project Structure
 
 ```
 claude-usage/
-├── ClaudeUsage/                    # SwiftUI app (recommended)
-│   ├── Package.swift
-│   └── Sources/ClaudeUsage/
-│       ├── ClaudeUsageApp.swift    # App entry point
-│       ├── AppDelegate.swift       # Menubar & popover management
-│       ├── ContentView.swift       # Main popover UI
-│       ├── UsageViewModel.swift    # Data fetching & state
-│       ├── Models/                 # Data models
-│       ├── Services/               # Data parsers & API client
-│       └── Views/                  # UI components
-│
-├── src/                            # Python app (legacy)
-│   ├── main.py                     # App entry point
-│   ├── config.py                   # Configuration
-│   ├── data/                       # Data layer
-│   │   ├── models.py
-│   │   ├── session_parser.py
-│   │   ├── account_parser.py
-│   │   └── usage_api.py
-│   └── ui/                         # UI layer
-│       ├── menu_builder.py
-│       └── formatters.py
-│
-├── requirements.txt                # Python dependencies
-├── setup.py                        # py2app config
-└── CLAUDE.md                       # Claude Code guidance
+├── Package.swift
+├── Resources/
+│   └── Info.plist                  # App bundle config
+├── Sources/ClaudeUsage/
+│   ├── ClaudeUsageApp.swift        # App entry point
+│   ├── AppDelegate.swift           # Menubar & window management
+│   ├── ContentView.swift           # Main popover UI
+│   ├── UsageViewModel.swift        # Data fetching & state
+│   ├── Models/
+│   │   ├── SessionInfo.swift       # Session data
+│   │   ├── UsageLimits.swift       # API usage data
+│   │   └── AccountInfo.swift       # Account settings
+│   ├── Services/
+│   │   ├── SessionParser.swift     # Streaming JSONL parser
+│   │   ├── AccountParser.swift     # Reads ~/.claude.json
+│   │   ├── UsageAPIClient.swift    # Anthropic API client
+│   │   ├── KeychainService.swift   # OAuth token access
+│   │   ├── NotificationService.swift  # Usage alerts
+│   │   ├── AnalyticsStore.swift    # Historical data storage
+│   │   └── SettingsService.swift   # User preferences
+│   └── Views/
+│       ├── CurrentSessionView.swift
+│       ├── UsageLimitsView.swift
+│       ├── ExtraUsageView.swift
+│       ├── RecentSessionsView.swift
+│       ├── AnalyticsView.swift     # Charts & trends
+│       ├── SettingsView.swift      # Tabbed settings
+│       ├── AlertSettingsView.swift
+│       └── ProgressBarView.swift
+├── CLAUDE.md
+└── README.md
 ```
 
 ## How It Works
@@ -131,25 +100,20 @@ The app reads data from three sources:
 2. **Account Config** (`~/.claude.json`): Your account settings including extra usage status
 3. **Anthropic API**: Real-time usage limits fetched using your OAuth token from the macOS Keychain
 
+Analytics data is stored locally in `~/.claude-usage/analytics.json`.
+
 ## Development
 
-### SwiftUI App
-
-The SwiftUI version is the actively maintained implementation. Key files:
+Key files:
 
 - `UsageViewModel.swift` - Central state management with `@Observable`
 - `Services/SessionParser.swift` - Streaming JSONL parser (handles large files efficiently)
 - `Services/KeychainService.swift` - Reads OAuth token via `security` CLI
 - `Services/UsageAPIClient.swift` - Fetches usage from Anthropic API
+- `Services/AnalyticsStore.swift` - Persists usage snapshots and daily stats
+- `Services/NotificationService.swift` - Handles macOS notifications for alerts
 
-To modify the UI, edit files in `Views/`. The app uses standard SwiftUI components with a popover-based interface.
-
-### Adding Features
-
-1. Add data models in `Models/`
-2. Add data fetching in `Services/`
-3. Update `UsageViewModel.swift` to expose new data
-4. Create or update views in `Views/`
+To modify the UI, edit files in `Views/`. The app uses standard SwiftUI components.
 
 ### Debugging
 
