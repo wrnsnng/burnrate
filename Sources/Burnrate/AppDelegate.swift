@@ -27,7 +27,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Create the popover
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 320, height: 650)
+        popover.contentSize = NSSize(width: 340, height: 580)
         popover.behavior = .transient
         popover.animates = true
         popover.contentViewController = NSHostingController(
@@ -79,7 +79,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem.button else { return }
 
         let title = viewModel.menubarTitle
-        button.title = "⚡ \(title)"
+        button.title = "🔥 \(title)"
     }
 
     @objc private func togglePopover() {
@@ -123,7 +123,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingController = NSHostingController(rootView: analyticsView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Claude Usage Analytics"
+        window.title = "Burnrate analytics"
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.setContentSize(NSSize(width: 400, height: 550))
         window.center()
@@ -159,7 +159,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Settings"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 350, height: 280))
+        window.setContentSize(NSSize(width: 380, height: 320))
         window.center()
         window.isReleasedWhenClosed = false
 

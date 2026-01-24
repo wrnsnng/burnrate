@@ -1,4 +1,4 @@
-# Claude Usage
+# Burnrate
 
 A macOS menubar app that displays your Claude Code usage statistics in real-time.
 
@@ -24,7 +24,7 @@ Built by **Common Tools Co.**
 
 ### Option 1: Download Release (Recommended)
 
-Download the latest `ClaudeUsage.zip` from [Releases](https://github.com/wrnsnng/claude-usage/releases), unzip, and move to Applications.
+Download the latest `Burnrate.zip` from [Releases](https://github.com/wrnsnng/claude-usage/releases), unzip, and move to Applications.
 
 > **Note**: Since the app is not notarized, you'll need to right-click and select "Open" on first launch.
 
@@ -47,12 +47,12 @@ To create a distributable .app bundle:
 swift build -c release
 
 # Create app bundle
-mkdir -p "ClaudeUsage.app/Contents/MacOS"
-cp .build/release/ClaudeUsage "ClaudeUsage.app/Contents/MacOS/"
-cp Resources/Info.plist "ClaudeUsage.app/Contents/"
+mkdir -p "Burnrate.app/Contents/MacOS"
+cp .build/release/Burnrate "Burnrate.app/Contents/MacOS/"
+cp Resources/Info.plist "Burnrate.app/Contents/"
 
 # Zip for distribution
-zip -r "ClaudeUsage.zip" "ClaudeUsage.app"
+zip -r "Burnrate.zip" "Burnrate.app"
 ```
 
 ## Project Structure
@@ -62,8 +62,8 @@ claude-usage/
 ├── Package.swift
 ├── Resources/
 │   └── Info.plist                  # App bundle config
-├── Sources/ClaudeUsage/
-│   ├── ClaudeUsageApp.swift        # App entry point
+├── Sources/Burnrate/
+│   ├── BurnrateApp.swift          # App entry point
 │   ├── AppDelegate.swift           # Menubar & window management
 │   ├── ContentView.swift           # Main popover UI
 │   ├── UsageViewModel.swift        # Data fetching & state
@@ -119,7 +119,7 @@ To modify the UI, edit files in `Views/`. The app uses standard SwiftUI componen
 
 Run with debug output:
 ```bash
-swift build && .build/debug/ClaudeUsage
+swift build && .build/debug/Burnrate
 ```
 
 Logs are printed to stderr with `[DEBUG]` prefix.

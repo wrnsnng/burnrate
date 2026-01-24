@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Claude Usage is a macOS menubar application that displays Claude Code usage statistics. Built by Common Tools Co.
+Burnrate is a macOS menubar application that displays Claude Code usage statistics. Built by Common Tools Co.
 
 Features:
 - Current session token usage
@@ -26,10 +26,10 @@ swift run
 swift build -c release
 
 # Create .app bundle
-mkdir -p "ClaudeUsage.app/Contents/MacOS"
-cp .build/release/ClaudeUsage "ClaudeUsage.app/Contents/MacOS/"
-cp Resources/Info.plist "ClaudeUsage.app/Contents/"
-zip -r "ClaudeUsage.zip" "ClaudeUsage.app"
+mkdir -p "Burnrate.app/Contents/MacOS"
+cp .build/release/Burnrate "Burnrate.app/Contents/MacOS/"
+cp Resources/Info.plist "Burnrate.app/Contents/"
+zip -r "Burnrate.zip" "Burnrate.app"
 ```
 
 ## Architecture
@@ -39,8 +39,8 @@ claude-usage/
 ├── Package.swift
 ├── Resources/
 │   └── Info.plist
-└── Sources/ClaudeUsage/
-    ├── ClaudeUsageApp.swift        # Entry point, starts NSApplication
+└── Sources/Burnrate/
+    ├── BurnrateApp.swift           # Entry point, starts NSApplication
     ├── AppDelegate.swift           # NSStatusItem + NSPopover + window management
     ├── ContentView.swift           # Main popover view with ScrollView
     ├── UsageViewModel.swift        # @Observable state, data fetching, refresh timer

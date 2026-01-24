@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Claude Usage</string>
+    <string>Burnrate</string>
     <key>CFBundleDisplayName</key>
-    <string>Claude Usage</string>
+    <string>Burnrate</string>
     <key>CFBundleIdentifier</key>
-    <string>com.claudeusage.app</string>
+    <string>com.burnrate.app</string>
     <key>CFBundleVersion</key>
     <string>1.0.0</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
     <key>CFBundleExecutable</key>
-    <string>ClaudeUsage</string>
+    <string>Burnrate</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>

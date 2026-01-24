@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct ClaudeUsageApp {
+struct BurnrateApp {
     static func main() {
         NSLog("[DEBUG] main() starting")
         let app = NSApplication.shared

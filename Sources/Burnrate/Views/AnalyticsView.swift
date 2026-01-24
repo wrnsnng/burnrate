@@ -27,7 +27,7 @@ struct AnalyticsView: View {
             Divider()
 
             // Time range picker
-            Picker("Time Range", selection: $selectedTimeRange) {
+            Picker("Time range", selection: $selectedTimeRange) {
                 ForEach(TimeRange.allCases, id: \.self) { range in
                     Text(range.rawValue).tag(range)
                 }
@@ -40,7 +40,7 @@ struct AnalyticsView: View {
                     .frame(height: 200)
             } else {
                 ContentUnavailableView(
-                    "No Data Yet",
+                    "No data yet",
                     systemImage: "chart.line.uptrend.xyaxis",
                     description: Text("Usage data will appear here after the app runs for a while.")
                 )
@@ -80,7 +80,7 @@ struct UsageChartView: View {
                 LineMark(
                     x: .value("Time", snapshot.timestamp),
                     y: .value("Usage", snapshot.fiveHourUtilization),
-                    series: .value("Type", "5-Hour")
+                    series: .value("Type", "5-hour")
                 )
                 .foregroundStyle(.blue)
                 .lineStyle(StrokeStyle(lineWidth: 2))
@@ -88,7 +88,7 @@ struct UsageChartView: View {
                 LineMark(
                     x: .value("Time", snapshot.timestamp),
                     y: .value("Usage", snapshot.sevenDayUtilization),
-                    series: .value("Type", "7-Day")
+                    series: .value("Type", "7-day")
                 )
                 .foregroundStyle(.green)
                 .lineStyle(StrokeStyle(lineWidth: 2))
@@ -138,7 +138,7 @@ struct StatsView: View {
 
             // This Week
             VStack(alignment: .leading, spacing: 8) {
-                Label("This Week", systemImage: "calendar.badge.clock")
+                Label("This week", systemImage: "calendar.badge.clock")
                     .font(.headline)
 
                 HStack(spacing: 20) {

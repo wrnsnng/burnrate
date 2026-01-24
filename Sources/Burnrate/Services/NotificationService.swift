@@ -6,7 +6,7 @@ enum AlertType: String {
     case fiveHour90 = "5-hour usage at 90%"
     case sevenDay80 = "7-day usage at 80%"
     case sevenDay90 = "7-day usage at 90%"
-    case dailySummary = "Daily Summary"
+    case dailySummary = "Daily summary"
 }
 
 @Observable
@@ -80,7 +80,7 @@ final class NotificationService {
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Claude Usage Daily Summary"
+        content.title = "Burnrate daily summary"
         content.body = """
             5-Hour: \(Int(fiveHour))% | 7-Day: \(Int(sevenDay))%
             Today: \(formatTokens(tokensToday)) tokens, \(sessionsToday) sessions
@@ -110,7 +110,7 @@ final class NotificationService {
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Claude Usage Alert"
+        content.title = "Burnrate alert"
         content.body = "\(type.rawValue) - currently at \(Int(percentage))%"
         content.sound = .default
 

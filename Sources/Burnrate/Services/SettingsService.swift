@@ -1,10 +1,10 @@
 import Foundation
 
 enum MenubarDisplay: String, CaseIterable, Identifiable {
-    case sevenDay = "7-Day Usage"
-    case fiveHour = "5-Hour Usage"
+    case sevenDay = "7-day usage"
+    case fiveHour = "5-hour usage"
     case both = "Both (5h|7d)"
-    case iconOnly = "Icon Only"
+    case iconOnly = "Icon only"
 
     var id: String { rawValue }
 }
