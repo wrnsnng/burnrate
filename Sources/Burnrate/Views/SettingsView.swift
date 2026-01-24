@@ -21,7 +21,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle.fill")
                 }
         }
-        .frame(width: 380, height: 400)
+        .frame(minWidth: 400, minHeight: 420)
     }
 }
 
@@ -36,7 +36,7 @@ struct GeneralSettingsTab: View {
             SettingsSection(title: "Startup", icon: "power", iconColor: BurnrateTheme.statusGreen) {
                 SettingsToggle(
                     title: "Launch at login",
-                    subtitle: "Automatically start Burnrate when you log in",
+                    subtitle: "Start when you log in",
                     isOn: $settingsService.launchAtStartup
                 )
             }
@@ -100,15 +100,23 @@ struct MenubarOptionRow: View {
                 Spacer()
 
                 // Preview of what it looks like
-                Text(previewText(for: option))
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(BurnrateTheme.textTertiary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(BurnrateTheme.cardBackground)
-                    )
+                HStack(spacing: 4) {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(BurnrateTheme.statusOrange)
+
+                    if let preview = previewText(for: option) {
+                        Text(preview)
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                            .foregroundStyle(BurnrateTheme.textTertiary)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(BurnrateTheme.cardBackground)
+                )
             }
             .padding(.horizontal, BurnrateTheme.spacingMD)
             .padding(.vertical, BurnrateTheme.spacingSM)
@@ -125,12 +133,12 @@ struct MenubarOptionRow: View {
         }
     }
 
-    private func previewText(for option: MenubarDisplay) -> String {
+    private func previewText(for option: MenubarDisplay) -> String? {
         switch option {
-        case .sevenDay: return "🤖 72%"
-        case .fiveHour: return "🤖 35%"
-        case .both: return "🤖 35|72"
-        case .iconOnly: return "🤖"
+        case .sevenDay: return "72%"
+        case .fiveHour: return "35%"
+        case .both: return "35|72"
+        case .iconOnly: return nil
         }
     }
 }
