@@ -78,9 +78,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateMenubarTitle() {
         guard let button = statusItem.button else { return }
 
-        let title = viewModel.menubarTitle
-        let emoji = viewModel.menubarEmoji
-        button.title = "\(emoji) \(title)"
+        if viewModel.settingsService.menubarDisplay == .chart {
+            // Chart mode: show icon, no text
+            button.title = ""
+            button.image = viewModel.menubarIcon
+            button.image?.size = NSSize(width: 20, height: 20)
+        } else {
+            // Text modes: show emoji + text, no image
+            button.image = nil
+            let title = viewModel.menubarTitle
+            let emoji = viewModel.menubarEmoji
+            button.title = "\(emoji) \(title)"
+        }
     }
 
     @objc private func togglePopover() {
@@ -159,10 +168,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Settings"
-        window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 400, height: 450))
+        window.styleMask = [.titled, .closable, .resizable]
+        window.setContentSize(NSSize(width: 400, height: 520))
+        window.minSize = NSSize(width: 400, height: 480)
         window.center()
         window.isReleasedWhenClosed = false
+        window.level = .floating
 
         // Clean up reference when window closes
         window.delegate = self

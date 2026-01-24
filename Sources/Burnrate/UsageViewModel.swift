@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftUI
 
@@ -41,7 +42,7 @@ final class UsageViewModel {
             return "\(Int(limits.fiveHourUtilization.rounded()))%"
         case .both:
             return "\(Int(limits.fiveHourUtilization.rounded()))|\(Int(limits.sevenDayUtilization.rounded()))"
-        case .iconOnly:
+        case .iconOnly, .chart:
             return ""
         }
     }
@@ -58,7 +59,7 @@ final class UsageViewModel {
             percentage = limits.sevenDayUtilization
         case .fiveHour:
             percentage = limits.fiveHourUtilization
-        case .both, .iconOnly:
+        case .both, .iconOnly, .chart:
             percentage = max(limits.fiveHourUtilization, limits.sevenDayUtilization)
         }
 
@@ -69,6 +70,23 @@ final class UsageViewModel {
         } else {
             return "🤖"
         }
+    }
+
+    var menubarIcon: NSImage? {
+        guard let limits = usageLimits else {
+            // Default icon when no data
+            return MenubarIconRenderer.render(
+                fiveHour: 0,
+                sevenDay: 0,
+                colorScheme: settingsService.menubarColorScheme
+            )
+        }
+
+        return MenubarIconRenderer.render(
+            fiveHour: limits.fiveHourUtilization,
+            sevenDay: limits.sevenDayUtilization,
+            colorScheme: settingsService.menubarColorScheme
+        )
     }
 
     func startAutoRefresh() {
