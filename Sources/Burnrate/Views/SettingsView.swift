@@ -21,7 +21,8 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle.fill")
                 }
         }
-        .frame(minWidth: 400, minHeight: 420)
+        .padding(.top, BurnrateTheme.spacingMD)
+        .frame(minWidth: 400, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
     }
 }
 
@@ -31,40 +32,64 @@ struct GeneralSettingsTab: View {
     @Bindable var settingsService: SettingsService
 
     var body: some View {
-        VStack(alignment: .leading, spacing: BurnrateTheme.spacingXL) {
-            // Startup section
-            SettingsSection(title: "Startup", icon: "power", iconColor: BurnrateTheme.statusGreen) {
-                SettingsToggle(
-                    title: "Launch at login",
-                    subtitle: "Start when you log in",
-                    isOn: $settingsService.launchAtStartup
-                )
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: BurnrateTheme.spacingXL) {
+                // Startup section
+                SettingsSection(title: "Startup", icon: "power", iconColor: BurnrateTheme.statusGreen) {
+                    SettingsToggle(
+                        title: "Launch at login",
+                        subtitle: settingsService.canUseLaunchAtLogin
+                            ? "Start when you log in"
+                            : "Requires running as bundled .app",
+                        isOn: $settingsService.launchAtStartup,
+                        isDisabled: !settingsService.canUseLaunchAtLogin
+                    )
+                }
 
-            // Menubar display section
-            SettingsSection(title: "Menubar display", icon: "menubar.rectangle") {
-                VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
-                    // Custom radio-style picker
-                    VStack(spacing: BurnrateTheme.spacingSM) {
-                        ForEach(MenubarDisplay.allCases) { option in
-                            MenubarOptionRow(
-                                option: option,
-                                isSelected: settingsService.menubarDisplay == option,
-                                onSelect: { settingsService.menubarDisplay = option }
-                            )
+                // Menubar display section
+                SettingsSection(title: "Menubar display", icon: "menubar.rectangle") {
+                    VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
+                        // Custom radio-style picker
+                        VStack(spacing: BurnrateTheme.spacingSM) {
+                            ForEach(MenubarDisplay.allCases) { option in
+                                MenubarOptionRow(
+                                    option: option,
+                                    isSelected: settingsService.menubarDisplay == option,
+                                    colorScheme: settingsService.menubarColorScheme,
+                                    onSelect: { settingsService.menubarDisplay = option }
+                                )
+                            }
                         }
-                    }
 
-                    Text("Choose what to display next to the icon in your menubar.")
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(BurnrateTheme.textTertiary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        // Chart color scheme picker (only visible when chart is selected)
+                        if settingsService.menubarDisplay == .chart {
+                            VStack(alignment: .leading, spacing: BurnrateTheme.spacingSM) {
+                                Text("Chart color scheme")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(BurnrateTheme.textSecondary)
+
+                                HStack(spacing: BurnrateTheme.spacingSM) {
+                                    ForEach(MenubarColorScheme.allCases) { scheme in
+                                        ColorSchemeButton(
+                                            scheme: scheme,
+                                            isSelected: settingsService.menubarColorScheme == scheme,
+                                            onSelect: { settingsService.menubarColorScheme = scheme }
+                                        )
+                                    }
+                                }
+                            }
+                            .padding(.top, BurnrateTheme.spacingXS)
+                        }
+
+                        Text("Choose what to display next to the icon in your menubar.")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(BurnrateTheme.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
-
-            Spacer()
+            .padding(BurnrateTheme.spacingLG)
         }
-        .padding(BurnrateTheme.spacingXL)
     }
 }
 
@@ -73,6 +98,7 @@ struct GeneralSettingsTab: View {
 struct MenubarOptionRow: View {
     let option: MenubarDisplay
     let isSelected: Bool
+    var colorScheme: MenubarColorScheme = .dynamic
     let onSelect: () -> Void
 
     @State private var isHovered = false
@@ -100,23 +126,33 @@ struct MenubarOptionRow: View {
                 Spacer()
 
                 // Preview of what it looks like
-                HStack(spacing: 4) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(BurnrateTheme.statusOrange)
+                if option == .chart {
+                    ChartPreview(colorScheme: colorScheme)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(BurnrateTheme.cardBackground)
+                        )
+                } else {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(BurnrateTheme.statusOrange)
 
-                    if let preview = previewText(for: option) {
-                        Text(preview)
-                            .font(.system(size: 11, weight: .medium, design: .monospaced))
-                            .foregroundStyle(BurnrateTheme.textTertiary)
+                        if let preview = previewText(for: option) {
+                            Text(preview)
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundStyle(BurnrateTheme.textTertiary)
+                        }
                     }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(BurnrateTheme.cardBackground)
+                    )
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(BurnrateTheme.cardBackground)
-                )
             }
             .padding(.horizontal, BurnrateTheme.spacingMD)
             .padding(.vertical, BurnrateTheme.spacingSM)
@@ -139,6 +175,131 @@ struct MenubarOptionRow: View {
         case .fiveHour: return "35%"
         case .both: return "35|72"
         case .iconOnly: return nil
+        case .chart: return nil
+        }
+    }
+}
+
+// MARK: - Chart Preview
+
+struct ChartPreview: View {
+    let colorScheme: MenubarColorScheme
+
+    private let fiveHourPreview: Double = 35
+    private let sevenDayPreview: Double = 72
+
+    var body: some View {
+        VStack(spacing: 2) {
+            // Top bar (5-hour)
+            RoundedRectangle(cornerRadius: 1)
+                .fill(topBarColor)
+                .frame(width: 14 * (fiveHourPreview / 100), height: 4)
+                .frame(width: 14, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.primary.opacity(0.1))
+                )
+
+            // Bottom bar (7-day)
+            RoundedRectangle(cornerRadius: 1)
+                .fill(bottomBarColor)
+                .frame(width: 14 * (sevenDayPreview / 100), height: 4)
+                .frame(width: 14, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.primary.opacity(0.1))
+                )
+        }
+    }
+
+    private var topBarColor: Color {
+        switch colorScheme {
+        case .dynamic:
+            return BurnrateTheme.statusGreen
+        case .distinct:
+            return Color(hex: 0x3B82F6)
+        case .monochrome:
+            return .primary
+        }
+    }
+
+    private var bottomBarColor: Color {
+        switch colorScheme {
+        case .dynamic:
+            return BurnrateTheme.statusOrange
+        case .distinct:
+            return Color(hex: 0xA855F7)
+        case .monochrome:
+            return .primary
+        }
+    }
+}
+
+// MARK: - Color Scheme Button
+
+struct ColorSchemeButton: View {
+    let scheme: MenubarColorScheme
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(spacing: 4) {
+                // Preview bars
+                VStack(spacing: 2) {
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(topColor)
+                        .frame(width: 20, height: 4)
+
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(bottomColor)
+                        .frame(width: 20, height: 4)
+                }
+
+                Text(scheme.rawValue)
+                    .font(.system(size: 10, weight: isSelected ? .medium : .regular))
+                    .foregroundStyle(isSelected ? BurnrateTheme.textPrimary : BurnrateTheme.textTertiary)
+            }
+            .padding(.horizontal, BurnrateTheme.spacingSM)
+            .padding(.vertical, BurnrateTheme.spacingXS)
+            .background(
+                RoundedRectangle(cornerRadius: BurnrateTheme.radiusSM)
+                    .fill(isSelected ? BurnrateTheme.cardBackgroundHover : (isHovered ? BurnrateTheme.cardBackground : Color.clear))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: BurnrateTheme.radiusSM)
+                            .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(BurnrateTheme.easeOut) {
+                isHovered = hovering
+            }
+        }
+    }
+
+    private var topColor: Color {
+        switch scheme {
+        case .dynamic:
+            return BurnrateTheme.statusGreen
+        case .distinct:
+            return Color(hex: 0x3B82F6)
+        case .monochrome:
+            return .primary
+        }
+    }
+
+    private var bottomColor: Color {
+        switch scheme {
+        case .dynamic:
+            return BurnrateTheme.statusOrange
+        case .distinct:
+            return Color(hex: 0xA855F7)
+        case .monochrome:
+            return .primary
         }
     }
 }
@@ -149,39 +310,39 @@ struct AlertsSettingsTab: View {
     @Bindable var notificationService: NotificationService
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SettingsSection(title: "Notifications", icon: "bell.fill", iconColor: BurnrateTheme.statusOrange) {
-                VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
-                    // Main toggle
-                    SettingsToggle(
-                        title: "Enable usage alerts",
-                        subtitle: "Get notified when approaching limits",
-                        isOn: $notificationService.alertsEnabled
-                    )
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                SettingsSection(title: "Notifications", icon: "bell.fill", iconColor: BurnrateTheme.statusOrange) {
+                    VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
+                        // Main toggle
+                        SettingsToggle(
+                            title: "Enable usage alerts",
+                            subtitle: "Get notified when approaching limits",
+                            isOn: $notificationService.alertsEnabled
+                        )
 
-                    if notificationService.alertsEnabled {
-                        VStack(spacing: BurnrateTheme.spacingSM) {
-                            SettingsToggle(
-                                title: "5-hour usage alerts",
-                                subtitle: "Alert at 80% and 90%",
-                                isOn: $notificationService.fiveHourAlerts,
-                                isIndented: true
-                            )
+                        if notificationService.alertsEnabled {
+                            VStack(spacing: BurnrateTheme.spacingSM) {
+                                SettingsToggle(
+                                    title: "5-hour usage alerts",
+                                    subtitle: "Alert at 80% and 90%",
+                                    isOn: $notificationService.fiveHourAlerts,
+                                    isIndented: true
+                                )
 
-                            SettingsToggle(
-                                title: "7-day usage alerts",
-                                subtitle: "Alert at 80% and 90%",
-                                isOn: $notificationService.sevenDayAlerts,
-                                isIndented: true
-                            )
+                                SettingsToggle(
+                                    title: "7-day usage alerts",
+                                    subtitle: "Alert at 80% and 90%",
+                                    isOn: $notificationService.sevenDayAlerts,
+                                    isIndented: true
+                                )
+                            }
                         }
                     }
                 }
             }
-
-            Spacer()
+            .padding(BurnrateTheme.spacingLG)
         }
-        .padding(BurnrateTheme.spacingXL)
     }
 }
 
@@ -224,13 +385,14 @@ struct SettingsToggle: View {
     var subtitle: String? = nil
     @Binding var isOn: Bool
     var isIndented: Bool = false
+    var isDisabled: Bool = false
 
     var body: some View {
         HStack(spacing: BurnrateTheme.spacingMD) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(BurnrateTheme.textPrimary)
+                    .foregroundStyle(isDisabled ? BurnrateTheme.textTertiary : BurnrateTheme.textPrimary)
 
                 if let subtitle = subtitle {
                     Text(subtitle)
@@ -244,6 +406,7 @@ struct SettingsToggle: View {
             Toggle("", isOn: $isOn)
                 .toggleStyle(.switch)
                 .controlSize(.small)
+                .disabled(isDisabled)
         }
         .padding(.horizontal, BurnrateTheme.spacingMD)
         .padding(.vertical, BurnrateTheme.spacingSM)

@@ -6,6 +6,15 @@ enum MenubarDisplay: String, CaseIterable, Identifiable {
     case fiveHour = "5-hour usage"
     case both = "Both (5h|7d)"
     case iconOnly = "Icon only"
+    case chart = "Chart"
+
+    var id: String { rawValue }
+}
+
+enum MenubarColorScheme: String, CaseIterable, Identifiable {
+    case dynamic = "Dynamic"
+    case distinct = "Distinct"
+    case monochrome = "Monochrome"
 
     var id: String { rawValue }
 }
@@ -18,11 +27,22 @@ final class SettingsService {
         }
     }
 
+    var menubarColorScheme: MenubarColorScheme {
+        didSet {
+            UserDefaults.standard.set(menubarColorScheme.rawValue, forKey: "menubarColorScheme")
+        }
+    }
+
     var launchAtStartup: Bool {
         get {
-            SMAppService.mainApp.status == .enabled
+            guard Bundle.main.bundleIdentifier != nil else { return false }
+            return SMAppService.mainApp.status == .enabled
         }
         set {
+            guard Bundle.main.bundleIdentifier != nil else {
+                NSLog("[Settings] Launch at login requires running as bundled .app")
+                return
+            }
             do {
                 if newValue {
                     try SMAppService.mainApp.register()
@@ -35,8 +55,15 @@ final class SettingsService {
         }
     }
 
+    var canUseLaunchAtLogin: Bool {
+        Bundle.main.bundleIdentifier != nil
+    }
+
     init() {
-        let saved = UserDefaults.standard.string(forKey: "menubarDisplay") ?? MenubarDisplay.sevenDay.rawValue
-        self.menubarDisplay = MenubarDisplay(rawValue: saved) ?? .sevenDay
+        let savedDisplay = UserDefaults.standard.string(forKey: "menubarDisplay") ?? MenubarDisplay.sevenDay.rawValue
+        self.menubarDisplay = MenubarDisplay(rawValue: savedDisplay) ?? .sevenDay
+
+        let savedColorScheme = UserDefaults.standard.string(forKey: "menubarColorScheme") ?? MenubarColorScheme.dynamic.rawValue
+        self.menubarColorScheme = MenubarColorScheme(rawValue: savedColorScheme) ?? .dynamic
     }
 }
