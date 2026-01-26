@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Burnrate Updates</title>
+    <link>https://github.com/wrnsnng/burnrate/releases</link>
+    <description>Most recent updates to Burnrate</description>
+    <language>en</language>
+    <item>
+      <title>Version 0.1.5-beta</title>
+      <pubDate>Mon, 26 Jan 2026 11:20:16 GMT</pubDate>
+      <sparkle:version>0.1.5-beta</sparkle:version>
+      <sparkle:shortVersionString>0.1.5-beta</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/wrnsnng/burnrate/releases/download/v0.1.5-beta/Burnrate-0.1.5-beta.zip"
+        length="753908"
+        type="application/octet-stream"
+        sparkle:edSignature="HDcPHQEV/Ospgjzql7vqIQbMLLT0q2NYrb3ktXxPTzFuhAyDUkBXvAhKOXrS0cPhVaFJn7Dz2QVd4meGHTnNAQ=="
+      />
+    </item>
+  </channel>
+</rss>
