@@ -140,8 +140,21 @@ if [ -n "${APPLE_TEAM_ID:-}" ]; then
   info "[3/8] Signing app with hardened runtime..."
   info "Using identity: $SIGNING_IDENTITY"
 
-  # Sign Sparkle framework first if it exists
-  if [ -d "$APP_PATH/Contents/Frameworks/Sparkle.framework" ]; then
+  # Sign Sparkle framework components (innermost to outermost)
+  SPARKLE_FW="$APP_PATH/Contents/Frameworks/Sparkle.framework/Versions/B"
+  if [ -d "$SPARKLE_FW" ]; then
+    # Sign XPC services
+    for xpc in "$SPARKLE_FW/XPCServices"/*.xpc; do
+      [ -d "$xpc" ] && codesign --force --options runtime --timestamp \
+        --sign "$SIGNING_IDENTITY" "$xpc"
+    done
+    # Sign Updater.app
+    [ -d "$SPARKLE_FW/Updater.app" ] && codesign --force --options runtime --timestamp \
+      --sign "$SIGNING_IDENTITY" "$SPARKLE_FW/Updater.app"
+    # Sign Autoupdate
+    [ -f "$SPARKLE_FW/Autoupdate" ] && codesign --force --options runtime --timestamp \
+      --sign "$SIGNING_IDENTITY" "$SPARKLE_FW/Autoupdate"
+    # Sign the framework itself
     codesign --force --options runtime --timestamp \
       --sign "$SIGNING_IDENTITY" \
       "$APP_PATH/Contents/Frameworks/Sparkle.framework"
