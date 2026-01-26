@@ -38,6 +38,19 @@ success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 
+# Create a clean zip without AppleDouble (._) files that break code signatures
+# Uses tar with COPYFILE_DISABLE to strip extended attributes, then re-zips
+create_clean_zip() {
+  local src_path="$1"
+  local dest_zip="$2"
+  local src_name=$(basename "$src_path")
+  local tmp_dir=$(mktemp -d)
+
+  COPYFILE_DISABLE=1 tar -cf - -C "$(dirname "$src_path")" "$src_name" | tar -xf - -C "$tmp_dir"
+  (cd "$tmp_dir" && zip -r --symlinks "$dest_zip" "$src_name")
+  rm -rf "$tmp_dir"
+}
+
 # Validate semver format
 validate_version() {
   local version=$1
@@ -182,8 +195,7 @@ if [ -n "${APPLE_TEAM_ID:-}" ]; then
     info "[4/8] Creating ZIP for notarization..."
     ZIP_PATH="$REPO_ROOT/Burnrate-notarize.zip"
     rm -f "$ZIP_PATH"
-    cd "$REPO_ROOT"
-    zip -r --symlinks "$ZIP_PATH" Burnrate.app -x "*.DS_Store" -x "*._*"
+    create_clean_zip "$APP_PATH" "$ZIP_PATH"
 
     info "[5/8] Submitting for notarization (this may take a few minutes)..."
     xcrun notarytool submit "$ZIP_PATH" \
@@ -205,13 +217,12 @@ else
   warn "[4-6/8] Skipping notarization - APPLE_TEAM_ID not set"
 fi
 
-# Create distributable ZIP (use zip to avoid ._ AppleDouble files that break signatures)
+# Create distributable ZIP (uses tar to strip extended attributes, then re-zips)
 DIST_DIR="$REPO_ROOT/dist"
 mkdir -p "$DIST_DIR"
 DIST_ZIP="$DIST_DIR/Burnrate-$VERSION.zip"
 rm -f "$DIST_ZIP"
-cd "$REPO_ROOT"
-zip -r --symlinks "$DIST_ZIP" Burnrate.app -x "*.DS_Store" -x "*._*"
+create_clean_zip "$APP_PATH" "$DIST_ZIP"
 success "Created distributable: $DIST_ZIP"
 
 # Sign the update for Sparkle
