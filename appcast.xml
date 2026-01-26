@@ -7,15 +7,15 @@
     <language>en</language>
     <item>
       <title>Version 0.1.6-beta</title>
-      <pubDate>Mon, 26 Jan 2026 11:28:33 GMT</pubDate>
+      <pubDate>Mon, 26 Jan 2026 11:31:00 GMT</pubDate>
       <sparkle:version>0.1.6-beta</sparkle:version>
       <sparkle:shortVersionString>0.1.6-beta</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
         url="https://github.com/wrnsnng/burnrate/releases/download/v0.1.6-beta/Burnrate-0.1.6-beta.zip"
-        length="1797989"
+        length="1797966"
         type="application/octet-stream"
-        sparkle:edSignature="RLbNweNQmTv7FDqnXbQtJ+64Hn37fb55SH++orFllQgrunFhl+prWcM/BK/EKaFv2O9IuCzZkpgZM89WYlPkBg=="
+        sparkle:edSignature="qRrAikzSFwEvC2/VxTBogz43uD2xx/4AL25U9sQ5TTDIWE4DANMczka+bnBQCmIdTGOBNYBxxFSsrGiBY00JDA=="
       />
     </item>
   </channel>
