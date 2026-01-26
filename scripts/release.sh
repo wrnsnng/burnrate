@@ -123,7 +123,7 @@ if [ -f "Resources/AppIcon.icns" ]; then
 fi
 
 # Copy Sparkle framework
-SPARKLE_PATH=".build/artifacts/sparkle/Sparkle/Sparkle.framework"
+SPARKLE_PATH=".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
 if [ -d "$SPARKLE_PATH" ]; then
   cp -R "$SPARKLE_PATH" "$APP_PATH/Contents/Frameworks/"
 fi
