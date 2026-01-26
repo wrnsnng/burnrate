@@ -140,19 +140,19 @@ if [ -n "${APPLE_TEAM_ID:-}" ]; then
 
   # Sign Sparkle framework first if it exists
   if [ -d "$APP_PATH/Contents/Frameworks/Sparkle.framework" ]; then
-    codesign --force --deep --options runtime --timestamp \
+    codesign --force --options runtime --timestamp \
       --sign "$SIGNING_IDENTITY" \
       "$APP_PATH/Contents/Frameworks/Sparkle.framework"
   fi
 
   # Sign the main app
-  codesign --force --deep --options runtime --timestamp \
+  codesign --force --options runtime --timestamp \
     --sign "$SIGNING_IDENTITY" \
     --entitlements "Resources/Burnrate.entitlements" \
     "$APP_PATH"
 
   # Verify signature
-  codesign --verify --deep --strict "$APP_PATH"
+  codesign --verify --strict "$APP_PATH"
   success "App signed and verified"
 else
   warn "[3/8] Skipping code signing - APPLE_TEAM_ID not set"
@@ -200,24 +200,21 @@ success "Created distributable: $DIST_ZIP"
 # Sign the update for Sparkle
 info "[7/8] Signing update for Sparkle..."
 SPARKLE_SIGN_TOOL=".build/artifacts/sparkle/Sparkle/bin/sign_update"
-if [ -x "$SPARKLE_SIGN_TOOL" ]; then
-  SPARKLE_SIGNATURE=$("$SPARKLE_SIGN_TOOL" "$DIST_ZIP" 2>&1 | grep "sparkle:edSignature=" | cut -d'"' -f2)
-  if [ -n "$SPARKLE_SIGNATURE" ]; then
-    success "Sparkle signature generated"
-  else
-    warn "Failed to generate Sparkle signature"
-    SPARKLE_SIGNATURE=""
-  fi
-else
-  warn "Sparkle sign_update tool not found"
-  SPARKLE_SIGNATURE=""
+if [ ! -x "$SPARKLE_SIGN_TOOL" ]; then
+  error "Sparkle sign_update tool not found at $SPARKLE_SIGN_TOOL"
 fi
 
-# Generate appcast.xml
+SPARKLE_SIGNATURE=$("$SPARKLE_SIGN_TOOL" "$DIST_ZIP" 2>&1 | grep "sparkle:edSignature=" | cut -d'"' -f2)
+if [ -z "$SPARKLE_SIGNATURE" ]; then
+  error "Failed to generate Sparkle signature - ensure EdDSA key is configured"
+fi
+success "Sparkle signature generated"
+
+# Generate appcast.xml (committed to repo root for raw.githubusercontent.com access)
 info "[8/8] Generating appcast.xml..."
-APPCAST_PATH="$DIST_DIR/appcast.xml"
+APPCAST_PATH="$REPO_ROOT/appcast.xml"
 FILE_SIZE=$(stat -f%z "$DIST_ZIP")
-PUB_DATE=$(date -R)
+PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S GMT")
 DOWNLOAD_URL="https://github.com/wrnsnng/burnrate/releases/download/v$VERSION/Burnrate-$VERSION.zip"
 
 cat > "$APPCAST_PATH" << EOF
@@ -246,24 +243,23 @@ cat > "$APPCAST_PATH" << EOF
 EOF
 success "Generated appcast.xml"
 
-# Create git tag if version was bumped
+# Commit appcast.xml and create git tag
+echo ""
+info "Committing appcast.xml and creating release..."
+
+git add appcast.xml
 if [ "$VERSION" != "$CURRENT_VERSION" ]; then
-  echo ""
-  info "Creating git commit and tag..."
-
   git add Resources/Info.plist
-  git commit -m "chore: release v$VERSION"
-  git tag -a "v$VERSION" -m "Release v$VERSION"
+fi
+git commit -m "chore: release v$VERSION"
+git tag -a "v$VERSION" -m "Release v$VERSION"
 
-  read -rp "Push to origin? [y/N] " PUSH_CONFIRM
-  if [[ "$PUSH_CONFIRM" =~ ^[Yy]$ ]]; then
-    git push && git push origin "v$VERSION"
-    success "Git tag v$VERSION created and pushed"
-  else
-    info "Skipping push - run 'git push && git push origin v$VERSION' manually"
-  fi
+read -rp "Push to origin? [y/N] " PUSH_CONFIRM
+if [[ "$PUSH_CONFIRM" =~ ^[Yy]$ ]]; then
+  git push && git push origin "v$VERSION"
+  success "Git tag v$VERSION created and pushed"
 else
-  info "Skipping git tag (no version bump)"
+  info "Skipping push - run 'git push && git push origin v$VERSION' manually"
 fi
 
 # Upload to GitHub releases if gh is available
@@ -276,17 +272,18 @@ if command -v gh &> /dev/null && [ -f "$DIST_ZIP" ]; then
     if ! gh release create "v$VERSION" \
       --title "Burnrate v$VERSION" \
       --notes "Release v$VERSION" \
-      "$DIST_ZIP" "$APPCAST_PATH"; then
+      "$DIST_ZIP"; then
       info "Release may already exist, attempting to upload assets..."
-      gh release upload "v$VERSION" "$DIST_ZIP" "$APPCAST_PATH" --clobber
+      gh release upload "v$VERSION" "$DIST_ZIP" --clobber
     fi
 
-    success "GitHub release v$VERSION uploaded (includes appcast.xml for auto-updates)"
+    success "GitHub release v$VERSION uploaded"
+    info "Note: appcast.xml is committed to repo root and served via raw.githubusercontent.com"
   fi
 fi
 
 echo ""
 success "Release v$VERSION complete!"
 info "Distributable: $DIST_ZIP"
-info "Appcast: $APPCAST_PATH"
+info "Appcast: $APPCAST_PATH (committed to repo root)"
 info "App bundle: $APP_PATH"
