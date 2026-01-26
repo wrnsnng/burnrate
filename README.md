@@ -2,6 +2,12 @@
   <img src="Resources/icon.png" alt="Burnrate" width="128" height="128">
 </p>
 
+<p align="center">
+  <a href="https://github.com/wrnsnng/burnrate/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download">
+  </a>
+</p>
+
 # Burnrate
 
 A macOS menubar app that displays your Claude Code usage statistics in real-time.
