@@ -126,6 +126,8 @@ fi
 SPARKLE_PATH=".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
 if [ -d "$SPARKLE_PATH" ]; then
   cp -R "$SPARKLE_PATH" "$APP_PATH/Contents/Frameworks/"
+  # Add rpath so the binary can find Sparkle framework
+  install_name_tool -add_rpath @executable_path/../Frameworks "$APP_PATH/Contents/MacOS/Burnrate"
 fi
 
 success "App bundle created"
