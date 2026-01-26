@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Sparkle
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -9,8 +10,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var analyticsWindow: NSWindow?
     private var settingsWindow: NSWindow?
 
+    // Sparkle updater controller
+    private var updaterController: SPUStandardUpdaterController!
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSLog("[DEBUG] applicationDidFinishLaunching started")
+
+        // Initialize Sparkle updater
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
         // Request notification permissions
         viewModel.notificationService.requestPermissions()
@@ -185,6 +192,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func quit() {
         NSApplication.shared.terminate(nil)
+    }
+
+    func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
     }
 }
 

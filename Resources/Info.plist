@@ -26,5 +26,12 @@
 	<true/>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<!-- Sparkle Auto-Update Settings -->
+	<key>SUFeedURL</key>
+	<string>https://github.com/wrnsnng/burnrate/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>apOw6+icVsAh8Emfd1cwAkndoeAV71+anDE/w6rkZM8=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 </dict>
 </plist>

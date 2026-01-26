@@ -3,6 +3,7 @@
 # Burnrate Release Script
 #
 # Builds, signs, notarizes, and packages the macOS menubar app.
+# Also generates Sparkle appcast.xml for auto-updates.
 #
 # Usage:
 #   ./scripts/release.sh [version]
@@ -101,16 +102,17 @@ info "Building Burnrate v$VERSION..."
 echo ""
 
 # Build release binary
-info "[1/6] Building release binary..."
+info "[1/8] Building release binary..."
 swift build -c release
 success "Build complete"
 
 # Create app bundle
-info "[2/6] Creating app bundle..."
+info "[2/8] Creating app bundle..."
 APP_PATH="$REPO_ROOT/Burnrate.app"
 rm -rf "$APP_PATH"
 mkdir -p "$APP_PATH/Contents/MacOS"
 mkdir -p "$APP_PATH/Contents/Resources"
+mkdir -p "$APP_PATH/Contents/Frameworks"
 
 cp .build/release/Burnrate "$APP_PATH/Contents/MacOS/"
 cp Resources/Info.plist "$APP_PATH/Contents/"
@@ -120,6 +122,12 @@ if [ -f "Resources/AppIcon.icns" ]; then
   cp Resources/AppIcon.icns "$APP_PATH/Contents/Resources/"
 fi
 
+# Copy Sparkle framework
+SPARKLE_PATH=".build/artifacts/sparkle/Sparkle/Sparkle.framework"
+if [ -d "$SPARKLE_PATH" ]; then
+  cp -R "$SPARKLE_PATH" "$APP_PATH/Contents/Frameworks/"
+fi
+
 success "App bundle created"
 
 # Code signing
@@ -127,8 +135,17 @@ if [ -n "${APPLE_TEAM_ID:-}" ]; then
   # Use provided signing identity or construct from team ID
   SIGNING_IDENTITY="${SIGNING_IDENTITY:-Developer ID Application ($APPLE_TEAM_ID)}"
 
-  info "[3/6] Signing app with hardened runtime..."
+  info "[3/8] Signing app with hardened runtime..."
   info "Using identity: $SIGNING_IDENTITY"
+
+  # Sign Sparkle framework first if it exists
+  if [ -d "$APP_PATH/Contents/Frameworks/Sparkle.framework" ]; then
+    codesign --force --deep --options runtime --timestamp \
+      --sign "$SIGNING_IDENTITY" \
+      "$APP_PATH/Contents/Frameworks/Sparkle.framework"
+  fi
+
+  # Sign the main app
   codesign --force --deep --options runtime --timestamp \
     --sign "$SIGNING_IDENTITY" \
     --entitlements "Resources/Burnrate.entitlements" \
@@ -138,7 +155,7 @@ if [ -n "${APPLE_TEAM_ID:-}" ]; then
   codesign --verify --deep --strict "$APP_PATH"
   success "App signed and verified"
 else
-  warn "[3/6] Skipping code signing - APPLE_TEAM_ID not set"
+  warn "[3/8] Skipping code signing - APPLE_TEAM_ID not set"
 fi
 
 # Notarization using keychain profile (secure - no credentials in process list)
@@ -147,12 +164,12 @@ KEYCHAIN_PROFILE="${KEYCHAIN_PROFILE:-AC_PASSWORD}"
 if [ -n "${APPLE_TEAM_ID:-}" ]; then
   # Check if keychain profile exists
   if xcrun notarytool history --keychain-profile "$KEYCHAIN_PROFILE" &>/dev/null; then
-    info "[4/6] Creating ZIP for notarization..."
+    info "[4/8] Creating ZIP for notarization..."
     ZIP_PATH="$REPO_ROOT/Burnrate-notarize.zip"
     rm -f "$ZIP_PATH"
     ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
 
-    info "[5/6] Submitting for notarization (this may take a few minutes)..."
+    info "[5/8] Submitting for notarization (this may take a few minutes)..."
     xcrun notarytool submit "$ZIP_PATH" \
       --keychain-profile "$KEYCHAIN_PROFILE" \
       --wait
@@ -160,16 +177,16 @@ if [ -n "${APPLE_TEAM_ID:-}" ]; then
     # Clean up notarization zip
     rm -f "$ZIP_PATH"
 
-    info "[6/6] Stapling notarization ticket..."
+    info "[6/8] Stapling notarization ticket..."
     xcrun stapler staple "$APP_PATH"
     success "App notarized and stapled"
   else
-    warn "[4-6/6] Skipping notarization - keychain profile '$KEYCHAIN_PROFILE' not found"
+    warn "[4-6/8] Skipping notarization - keychain profile '$KEYCHAIN_PROFILE' not found"
     warn "Run this command to set up notarization credentials:"
     warn "  xcrun notarytool store-credentials \"$KEYCHAIN_PROFILE\" --apple-id \"your@email.com\" --team-id \"YOUR_TEAM_ID\" --password \"app-specific-password\""
   fi
 else
-  warn "[4-6/6] Skipping notarization - APPLE_TEAM_ID not set"
+  warn "[4-6/8] Skipping notarization - APPLE_TEAM_ID not set"
 fi
 
 # Create distributable ZIP
@@ -179,6 +196,55 @@ DIST_ZIP="$DIST_DIR/Burnrate-$VERSION.zip"
 rm -f "$DIST_ZIP"
 ditto -c -k --keepParent "$APP_PATH" "$DIST_ZIP"
 success "Created distributable: $DIST_ZIP"
+
+# Sign the update for Sparkle
+info "[7/8] Signing update for Sparkle..."
+SPARKLE_SIGN_TOOL=".build/artifacts/sparkle/Sparkle/bin/sign_update"
+if [ -x "$SPARKLE_SIGN_TOOL" ]; then
+  SPARKLE_SIGNATURE=$("$SPARKLE_SIGN_TOOL" "$DIST_ZIP" 2>&1 | grep "sparkle:edSignature=" | cut -d'"' -f2)
+  if [ -n "$SPARKLE_SIGNATURE" ]; then
+    success "Sparkle signature generated"
+  else
+    warn "Failed to generate Sparkle signature"
+    SPARKLE_SIGNATURE=""
+  fi
+else
+  warn "Sparkle sign_update tool not found"
+  SPARKLE_SIGNATURE=""
+fi
+
+# Generate appcast.xml
+info "[8/8] Generating appcast.xml..."
+APPCAST_PATH="$DIST_DIR/appcast.xml"
+FILE_SIZE=$(stat -f%z "$DIST_ZIP")
+PUB_DATE=$(date -R)
+DOWNLOAD_URL="https://github.com/wrnsnng/burnrate/releases/download/v$VERSION/Burnrate-$VERSION.zip"
+
+cat > "$APPCAST_PATH" << EOF
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Burnrate Updates</title>
+    <link>https://github.com/wrnsnng/burnrate/releases</link>
+    <description>Most recent updates to Burnrate</description>
+    <language>en</language>
+    <item>
+      <title>Version $VERSION</title>
+      <pubDate>$PUB_DATE</pubDate>
+      <sparkle:version>$VERSION</sparkle:version>
+      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="$DOWNLOAD_URL"
+        length="$FILE_SIZE"
+        type="application/octet-stream"
+        sparkle:edSignature="$SPARKLE_SIGNATURE"
+      />
+    </item>
+  </channel>
+</rss>
+EOF
+success "Generated appcast.xml"
 
 # Create git tag if version was bumped
 if [ "$VERSION" != "$CURRENT_VERSION" ]; then
@@ -210,16 +276,17 @@ if command -v gh &> /dev/null && [ -f "$DIST_ZIP" ]; then
     if ! gh release create "v$VERSION" \
       --title "Burnrate v$VERSION" \
       --notes "Release v$VERSION" \
-      "$DIST_ZIP"; then
-      info "Release may already exist, attempting to upload asset..."
-      gh release upload "v$VERSION" "$DIST_ZIP" --clobber
+      "$DIST_ZIP" "$APPCAST_PATH"; then
+      info "Release may already exist, attempting to upload assets..."
+      gh release upload "v$VERSION" "$DIST_ZIP" "$APPCAST_PATH" --clobber
     fi
 
-    success "GitHub release v$VERSION uploaded"
+    success "GitHub release v$VERSION uploaded (includes appcast.xml for auto-updates)"
   fi
 fi
 
 echo ""
 success "Release v$VERSION complete!"
 info "Distributable: $DIST_ZIP"
+info "Appcast: $APPCAST_PATH"
 info "App bundle: $APP_PATH"
