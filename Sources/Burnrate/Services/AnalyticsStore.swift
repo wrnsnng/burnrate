@@ -41,13 +41,13 @@ actor AnalyticsStore {
     private let maxDailyStatsAge: TimeInterval = 365 * 24 * 3600 // 1 year
 
     init() {
-        let claudeUsageDir = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".claude-usage")
+        let burnrateDir = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".burnrate")
 
         // Create directory if needed
-        try? FileManager.default.createDirectory(at: claudeUsageDir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: burnrateDir, withIntermediateDirectories: true)
 
-        self.storageURL = claudeUsageDir.appendingPathComponent("analytics.json")
+        self.storageURL = burnrateDir.appendingPathComponent("analytics.json")
         self.data = AnalyticsStore.loadData(from: storageURL)
 
         NSLog("[Analytics] Loaded \(data.snapshots.count) snapshots, \(data.dailyStats.count) daily stats")

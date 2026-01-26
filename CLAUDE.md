@@ -35,7 +35,7 @@ zip -r "Burnrate.zip" "Burnrate.app"
 ## Architecture
 
 ```
-claude-usage/
+burnrate/
 ├── Package.swift
 ├── Resources/
 │   └── Info.plist
@@ -75,7 +75,7 @@ claude-usage/
 - `UsageAPIClient` is an `actor` for thread-safe API caching
 - `SessionParser` uses streaming `FileHandle` reads to handle large session files (>10MB)
 - `KeychainService` uses `/usr/bin/security` CLI for reliable keychain access
-- `AnalyticsStore` is an `actor` that persists data to `~/.claude-usage/analytics.json`
+- `AnalyticsStore` is an `actor` that persists data to `~/.burnrate/analytics.json`
 - `NotificationService` guards against unbundled execution for `UNUserNotificationCenter`
 
 ## Data Sources
@@ -92,7 +92,7 @@ claude-usage/
    - OAuth token from Keychain service `Claude Code-credentials`
    - Returns `five_hour`, `seven_day`, `seven_day_opus` utilization
 
-4. **Analytics storage**: `~/.claude-usage/analytics.json`
+4. **Analytics storage**: `~/.burnrate/analytics.json`
    - Hourly usage snapshots (kept 30 days)
    - Daily stats: tokens, sessions, estimated cost (kept 1 year)
 

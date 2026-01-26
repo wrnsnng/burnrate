@@ -477,7 +477,7 @@ struct AboutTab: View {
             }
 
             // GitHub link
-            Link(destination: URL(string: "https://github.com/wrnsnng/claude-usage")!) {
+            Link(destination: URL(string: "https://github.com/wrnsnng/burnrate")!) {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.up.right.square.fill")
                         .font(.system(size: 12, weight: .medium))

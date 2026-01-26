@@ -28,14 +28,14 @@ Built by [Common Tools co.](https://common-tools.co) & [Rich Sison](https://www.
 
 ### Option 1: Download Release (Recommended)
 
-Download the latest `Burnrate.zip` from [Releases](https://github.com/wrnsnng/claude-usage/releases), unzip, and move to Applications.
+Download the latest `Burnrate.zip` from [Releases](https://github.com/wrnsnng/burnrate/releases), unzip, and move to Applications.
 
 ### Option 2: Build from Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/wrnsnng/claude-usage.git
-cd claude-usage
+git clone https://github.com/wrnsnng/burnrate.git
+cd burnrate
 
 # Build and run
 swift build
@@ -60,7 +60,7 @@ zip -r "Burnrate.zip" "Burnrate.app"
 ## Project Structure
 
 ```
-claude-usage/
+burnrate/
 ├── Package.swift
 ├── Resources/
 │   └── Info.plist                  # App bundle config
@@ -102,7 +102,7 @@ The app reads data from three sources:
 2. **Account Config** (`~/.claude.json`): Your account settings including extra usage status
 3. **Anthropic API**: Real-time usage limits fetched using your OAuth token from the macOS Keychain
 
-Analytics data is stored locally in `~/.claude-usage/analytics.json`.
+Analytics data is stored locally in `~/.burnrate/analytics.json`.
 
 ## Development
 
