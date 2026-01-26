@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="Resources/icon.png" alt="Burnrate" width="128" height="128">
+</p>
+
 # Burnrate
 
 A macOS menubar app that displays your Claude Code usage statistics in real-time.
@@ -25,8 +29,6 @@ Built by **Common Tools Co.**
 ### Option 1: Download Release (Recommended)
 
 Download the latest `Burnrate.zip` from [Releases](https://github.com/wrnsnng/claude-usage/releases), unzip, and move to Applications.
-
-> **Note**: Since the app is not notarized, you'll need to right-click and select "Open" on first launch.
 
 ### Option 2: Build from Source
 
@@ -134,7 +136,6 @@ Logs are printed to stderr with `[DEBUG]` prefix.
 
 ## Known Issues
 
-- App is not signed/notarized - requires right-click > Open on first launch
 - Requires Claude Code to be installed and logged in for OAuth token access
 
 ## License

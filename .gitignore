@@ -17,3 +17,7 @@ DerivedData/
 
 # Claude
 .claude/
+
+# Release
+.env.release
+dist/
