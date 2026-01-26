@@ -182,7 +182,8 @@ if [ -n "${APPLE_TEAM_ID:-}" ]; then
     info "[4/8] Creating ZIP for notarization..."
     ZIP_PATH="$REPO_ROOT/Burnrate-notarize.zip"
     rm -f "$ZIP_PATH"
-    COPYFILE_DISABLE=1 ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
+    cd "$REPO_ROOT"
+    zip -r --symlinks "$ZIP_PATH" Burnrate.app -x "*.DS_Store" -x "*._*"
 
     info "[5/8] Submitting for notarization (this may take a few minutes)..."
     xcrun notarytool submit "$ZIP_PATH" \
@@ -204,12 +205,13 @@ else
   warn "[4-6/8] Skipping notarization - APPLE_TEAM_ID not set"
 fi
 
-# Create distributable ZIP
+# Create distributable ZIP (use zip to avoid ._ AppleDouble files that break signatures)
 DIST_DIR="$REPO_ROOT/dist"
 mkdir -p "$DIST_DIR"
 DIST_ZIP="$DIST_DIR/Burnrate-$VERSION.zip"
 rm -f "$DIST_ZIP"
-COPYFILE_DISABLE=1 ditto -c -k --keepParent "$APP_PATH" "$DIST_ZIP"
+cd "$REPO_ROOT"
+zip -r --symlinks "$DIST_ZIP" Burnrate.app -x "*.DS_Store" -x "*._*"
 success "Created distributable: $DIST_ZIP"
 
 # Sign the update for Sparkle
