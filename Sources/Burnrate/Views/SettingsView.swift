@@ -471,23 +471,48 @@ struct AboutTab: View {
                 }
             }
 
-            // GitHub link
-            Link(destination: URL(string: "https://github.com/wrnsnng/burnrate")!) {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.up.right.square.fill")
-                        .font(.system(size: 12, weight: .medium))
-                    Text("View on GitHub")
-                        .font(.system(size: 12, weight: .medium))
+            // Action buttons
+            HStack(spacing: 12) {
+                // GitHub link
+                Link(destination: URL(string: "https://github.com/wrnsnng/burnrate")!) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.right.square.fill")
+                            .font(.system(size: 12, weight: .medium))
+                        Text("GitHub")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.accentColor.opacity(0.1))
+                    )
                 }
-                .foregroundStyle(Color.accentColor)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.accentColor.opacity(0.1))
-                )
+                .buttonStyle(.plain)
+
+                // Check for updates button
+                Button {
+                    if let appDelegate = NSApp.delegate as? AppDelegate {
+                        appDelegate.checkForUpdates()
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 12, weight: .medium))
+                        Text("Check for Updates")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.accentColor.opacity(0.1))
+                    )
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             Spacer()
         }

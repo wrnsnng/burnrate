@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import Sparkle
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
@@ -9,8 +10,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var analyticsWindow: NSWindow?
     private var settingsWindow: NSWindow?
 
+    // Sparkle updater controller (only available when running as bundled .app)
+    private var updaterController: SPUStandardUpdaterController?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSLog("[DEBUG] applicationDidFinishLaunching started")
+
+        // Only initialize Sparkle when running as a bundled app
+        // (Sparkle requires proper app bundle structure to function)
+        if Bundle.main.bundlePath.hasSuffix(".app") {
+            updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+            NSLog("[DEBUG] Sparkle updater initialized")
+        } else {
+            NSLog("[DEBUG] Skipping Sparkle - not running from app bundle")
+        }
 
         // Request notification permissions
         viewModel.notificationService.requestPermissions()
@@ -185,6 +198,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func quit() {
         NSApplication.shared.terminate(nil)
+    }
+
+    func checkForUpdates() {
+        updaterController?.checkForUpdates(nil)
     }
 }
 
