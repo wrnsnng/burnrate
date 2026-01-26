@@ -21,8 +21,13 @@ struct ProgressBarView: View {
         return Color(hex: 0x3B82F6)
     }
 
+    private var isResetPending: Bool {
+        guard let resetsAt = resetsAt else { return false }
+        return resetsAt.timeIntervalSinceNow <= 0
+    }
+
     private var shouldPulse: Bool {
-        value >= 80
+        value >= 80 && !isResetPending
     }
 
     var body: some View {
@@ -35,9 +40,10 @@ struct ProgressBarView: View {
 
                 Spacer()
 
-                Text("\(percentage)%")
+                Text(isResetPending ? "\(percentage)% (previous)" : "\(percentage)%")
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
                     .foregroundStyle(
+                        isResetPending ? BurnrateTheme.textTertiary :
                         value >= 90 ? BurnrateTheme.statusRed :
                         value >= 70 ? BurnrateTheme.statusOrange :
                         BurnrateTheme.textPrimary
@@ -55,6 +61,7 @@ struct ProgressBarView: View {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(BurnrateTheme.progressGradient(for: value))
                         .frame(width: max(0, geometry.size.width * min(animatedValue, 100) / 100))
+                        .opacity(isResetPending ? 0.5 : 1.0)
                         .pulsingGlow(color: glowColor, isActive: shouldPulse)
                 }
             }
@@ -62,9 +69,20 @@ struct ProgressBarView: View {
 
             // Reset time
             if let resetsAt = resetsAt {
-                Text("Resets \(formatTimeRemaining(resetsAt))")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(BurnrateTheme.textTertiary)
+                if isResetPending {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Previous cycle")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(BurnrateTheme.textSecondary)
+                        Text("New cycle starts on next session")
+                            .font(.system(size: 9, weight: .regular))
+                            .foregroundStyle(BurnrateTheme.textTertiary)
+                    }
+                } else {
+                    Text("Resets \(formatTimeRemaining(resetsAt))")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(BurnrateTheme.textTertiary)
+                }
             }
         }
         .padding(BurnrateTheme.spacingMD)
@@ -116,6 +134,7 @@ struct ProgressBarView: View {
         ProgressBarView(value: 35, label: "5-hour", resetsAt: Date().addingTimeInterval(3600))
         ProgressBarView(value: 72, label: "7-day", resetsAt: Date().addingTimeInterval(86400))
         ProgressBarView(value: 95, label: "Opus", resetsAt: nil)
+        ProgressBarView(value: 85, label: "Reset pending", resetsAt: Date().addingTimeInterval(-3600))
     }
     .padding()
     .frame(width: 300)
