@@ -421,32 +421,21 @@ struct SettingsToggle: View {
 // MARK: - About Tab
 
 struct AboutTab: View {
-    @State private var flameOffset: CGFloat = 0
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    }
 
     var body: some View {
         VStack(spacing: BurnrateTheme.spacingLG) {
             Spacer()
 
-            // Logo with glow
-            ZStack {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundStyle(BurnrateTheme.accentGradient)
-                    .blur(radius: 10)
-                    .opacity(0.5)
-
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 44, weight: .semibold))
-                    .foregroundStyle(BurnrateTheme.accentGradient)
-                    .offset(y: flameOffset)
-            }
-            .onAppear {
-                withAnimation(
-                    .easeInOut(duration: 2)
-                    .repeatForever(autoreverses: true)
-                ) {
-                    flameOffset = -2
-                }
+            // App icon
+            if let appIcon = NSImage(named: "AppIcon") {
+                Image(nsImage: appIcon)
+                    .resizable()
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
             }
 
             VStack(spacing: 4) {
@@ -454,7 +443,7 @@ struct AboutTab: View {
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(BurnrateTheme.textPrimary)
 
-                Text("Version 1.0.0")
+                Text("Version \(appVersion)")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(BurnrateTheme.textTertiary)
             }
@@ -465,15 +454,21 @@ struct AboutTab: View {
                 .frame(width: 100, height: 1)
                 .padding(.vertical, BurnrateTheme.spacingXS)
 
-            // Company
+            // Credits
             VStack(spacing: 4) {
                 Text("Made by")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(BurnrateTheme.textTertiary)
 
-                Text("Common Tools Co.")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(BurnrateTheme.textPrimary)
+                HStack(spacing: 4) {
+                    Link("Common Tools Co.", destination: URL(string: "https://www.common-tools.co")!)
+                        .font(.system(size: 13, weight: .semibold))
+                    Text("&")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(BurnrateTheme.textSecondary)
+                    Link("Rich Sison", destination: URL(string: "https://www.richardsison.com")!)
+                        .font(.system(size: 13, weight: .semibold))
+                }
             }
 
             // GitHub link
