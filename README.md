@@ -6,7 +6,7 @@
 
 A macOS menubar app that displays your Claude Code usage statistics in real-time.
 
-Built by **Common Tools Co.**
+Built by [Common Tools co.](https://common-tools.co) & [Rich Sison](https://www.richardsison.com/)
 
 ## Features
 
