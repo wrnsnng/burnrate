@@ -6,16 +6,16 @@
     <description>Most recent updates to Burnrate</description>
     <language>en</language>
     <item>
-      <title>Version 0.1.7-beta</title>
-      <pubDate>Mon, 26 Jan 2026 11:47:17 GMT</pubDate>
-      <sparkle:version>0.1.7-beta</sparkle:version>
-      <sparkle:shortVersionString>0.1.7-beta</sparkle:shortVersionString>
+      <title>Version 0.2.0-beta</title>
+      <pubDate>Sun, 08 Feb 2026 05:39:17 GMT</pubDate>
+      <sparkle:version>0.2.0-beta</sparkle:version>
+      <sparkle:shortVersionString>0.2.0-beta</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
-        url="https://github.com/wrnsnng/burnrate/releases/download/v0.1.7-beta/Burnrate-0.1.7-beta.zip"
-        length="1735764"
+        url="https://github.com/wrnsnng/burnrate/releases/download/v0.2.0-beta/Burnrate-0.2.0-beta.zip"
+        length="1841365"
         type="application/octet-stream"
-        sparkle:edSignature="4lnz+S8aLMFt/gYvVj3ZcWYAnk32SKD0gUdCrKZihvzcYMrenW1DOoZRxOFjDdYJR8LWYNrUu9g4bfj5oPHqAw=="
+        sparkle:edSignature="ENmHpZpGj7WVtQW5FZLj44mGp9RW8ystvHlOKNsBex7S21tJbVyAN2wMYwzoPPLCl5pZWN/aENcfumr/9vLZCQ=="
       />
     </item>
   </channel>
