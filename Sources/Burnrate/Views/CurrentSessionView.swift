@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CurrentSessionView: View {
     let session: CurrentSession?
+    var onTap: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
@@ -12,7 +13,7 @@ struct CurrentSessionView: View {
             )
 
             if let session = session {
-                SessionCard(session: session)
+                SessionCard(session: session, onTap: onTap)
             } else {
                 NoSessionView()
             }
@@ -24,15 +25,42 @@ struct CurrentSessionView: View {
 
 struct SessionCard: View {
     let session: CurrentSession
+    var onTap: (() -> Void)? = nil
     @State private var isHovered = false
+
+    private var isActive: Bool {
+        guard let lastModified = session.lastModified else { return false }
+        return Date().timeIntervalSince(lastModified) < 30
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
-            // Session title
-            Text(session.slug)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(BurnrateTheme.textPrimary)
-                .lineLimit(2)
+            // Session title + status badge
+            HStack(alignment: .top) {
+                Text(session.slug)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(BurnrateTheme.textPrimary)
+                    .lineLimit(2)
+
+                Spacer()
+
+                if isActive {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(BurnrateTheme.statusGreen)
+                            .frame(width: 6, height: 6)
+                        Text("Active")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(BurnrateTheme.statusGreen)
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(
+                        Capsule()
+                            .fill(BurnrateTheme.statusGreen.opacity(0.12))
+                    )
+                }
+            }
 
             // Stats row
             HStack(spacing: BurnrateTheme.spacingLG) {
@@ -49,25 +77,48 @@ struct SessionCard: View {
                 )
             }
 
-            // Duration
+            // Duration + last active
             HStack(spacing: BurnrateTheme.spacingXS) {
                 Image(systemName: "clock")
                     .font(.system(size: 10, weight: .medium))
-                Text("Started \(formatRelativeTime(session.startTime))")
-                    .font(.system(size: 11, weight: .medium))
+
+                if isActive {
+                    Text("Started \(formatRelativeTime(session.startTime))")
+                } else if let lastModified = session.lastModified {
+                    Text("Last active \(formatRelativeTime(lastModified))")
+                } else {
+                    Text("Started \(formatRelativeTime(session.startTime))")
+                }
             }
+            .font(.system(size: 11, weight: .medium))
             .foregroundStyle(BurnrateTheme.textTertiary)
+
+            // Hover hint
+            if isHovered && onTap != nil {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.system(size: 10, weight: .medium))
+                    Text("Open in terminal")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .foregroundStyle(Color.accentColor)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
         }
         .padding(BurnrateTheme.spacingMD)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: BurnrateTheme.radiusMD)
-                .fill(isHovered ? BurnrateTheme.cardBackgroundHover : BurnrateTheme.cardBackground)
+                .fill(isHovered && onTap != nil ? BurnrateTheme.cardBackgroundHover : BurnrateTheme.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: BurnrateTheme.radiusMD)
                         .strokeBorder(BurnrateTheme.cardBorder, lineWidth: 1)
                 )
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
         .onHover { hovering in
             withAnimation(BurnrateTheme.easeOut) {
                 isHovered = hovering
@@ -159,17 +210,21 @@ struct NoSessionView: View {
 
 #Preview {
     VStack(spacing: 20) {
-        CurrentSessionView(session: CurrentSession(
-            sessionId: "abc123",
-            slug: "Implement SwiftUI menubar app with custom theming",
-            projectPath: "/Users/test/project",
-            startTime: Date().addingTimeInterval(-3600),
-            inputTokens: 15000,
-            outputTokens: 8000,
-            cacheReadTokens: 5000,
-            cacheCreationTokens: 2000,
-            messageCount: 12
-        ))
+        CurrentSessionView(
+            session: CurrentSession(
+                sessionId: "abc123",
+                slug: "Implement SwiftUI menubar app with custom theming",
+                projectPath: "/Users/test/project",
+                startTime: Date().addingTimeInterval(-3600),
+                lastModified: Date().addingTimeInterval(-10),
+                inputTokens: 15000,
+                outputTokens: 8000,
+                cacheReadTokens: 5000,
+                cacheCreationTokens: 2000,
+                messageCount: 12
+            ),
+            onTap: {}
+        )
 
         CurrentSessionView(session: nil)
     }

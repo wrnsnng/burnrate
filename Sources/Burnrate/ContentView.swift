@@ -28,7 +28,9 @@ struct ContentView: View {
                     }
 
                     // Current Session
-                    CurrentSessionView(session: viewModel.currentSession)
+                    CurrentSessionView(session: viewModel.currentSession, onTap: {
+                        viewModel.openActiveSession()
+                    })
 
                     // Usage Limits
                     UsageLimitsView(
@@ -222,6 +224,7 @@ struct FooterActionsView: View {
                 slug: "Build SwiftUI app",
                 projectPath: "/Users/test/project",
                 startTime: Date().addingTimeInterval(-3600),
+                lastModified: Date().addingTimeInterval(-10),
                 inputTokens: 15000,
                 outputTokens: 8000,
                 cacheReadTokens: 0,
