@@ -21,6 +21,7 @@ struct CurrentSession {
     let slug: String
     let projectPath: String
     let startTime: Date
+    let lastModified: Date?
     let inputTokens: Int
     let outputTokens: Int
     let cacheReadTokens: Int

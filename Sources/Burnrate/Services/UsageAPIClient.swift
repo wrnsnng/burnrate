@@ -14,8 +14,13 @@ actor UsageAPIClient {
             }
         }
 
+        // If token is expired, return nil so ViewModel can surface auth error (not stale cache)
+        if KeychainService.isTokenExpired() {
+            return nil
+        }
+
         guard let token = KeychainService.getOAuthToken() else {
-            return cache
+            return nil
         }
 
         var request = URLRequest(url: apiURL)

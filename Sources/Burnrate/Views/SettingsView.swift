@@ -46,6 +46,19 @@ struct GeneralSettingsTab: View {
                     )
                 }
 
+                // Terminal section
+                SettingsSection(title: "Terminal", icon: "terminal.fill", iconColor: BurnrateTheme.textSecondary) {
+                    VStack(spacing: BurnrateTheme.spacingSM) {
+                        ForEach(PreferredTerminal.allCases) { terminal in
+                            TerminalOptionRow(
+                                terminal: terminal,
+                                isSelected: settingsService.preferredTerminal == terminal,
+                                onSelect: { settingsService.preferredTerminal = terminal }
+                            )
+                        }
+                    }
+                }
+
                 // Menubar display section
                 SettingsSection(title: "Menubar display", icon: "menubar.rectangle") {
                     VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
@@ -89,6 +102,59 @@ struct GeneralSettingsTab: View {
                 }
             }
             .padding(BurnrateTheme.spacingLG)
+        }
+    }
+}
+
+// MARK: - Terminal Option Row
+
+struct TerminalOptionRow: View {
+    let terminal: PreferredTerminal
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: BurnrateTheme.spacingMD) {
+                // Radio indicator
+                ZStack {
+                    Circle()
+                        .strokeBorder(isSelected ? Color.accentColor : BurnrateTheme.textTertiary, lineWidth: 1.5)
+                        .frame(width: 16, height: 16)
+
+                    if isSelected {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 8, height: 8)
+                    }
+                }
+
+                Text(terminal.rawValue)
+                    .font(.system(size: 13, weight: isSelected ? .medium : .regular))
+                    .foregroundStyle(isSelected ? BurnrateTheme.textPrimary : BurnrateTheme.textSecondary)
+
+                Spacer()
+
+                if !terminal.isInstalled {
+                    Text("Not installed")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(BurnrateTheme.textTertiary)
+                }
+            }
+            .padding(.horizontal, BurnrateTheme.spacingMD)
+            .padding(.vertical, BurnrateTheme.spacingSM)
+            .background(
+                RoundedRectangle(cornerRadius: BurnrateTheme.radiusSM)
+                    .fill(isHovered ? BurnrateTheme.cardBackgroundHover : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(BurnrateTheme.easeOut) {
+                isHovered = hovering
+            }
         }
     }
 }

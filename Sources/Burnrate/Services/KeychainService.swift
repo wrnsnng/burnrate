@@ -12,6 +12,9 @@ struct KeychainService {
         let expiresAt: Int64?
     }
 
+    private static var credentialCache: Credentials?
+    private static var cacheExpiry: Date?
+
     static func getOAuthToken() -> String? {
         guard let credentials = getCredentials() else { return nil }
         return credentials.claudeAiOauth?.accessToken
@@ -28,7 +31,12 @@ struct KeychainService {
         return now > expiresAt - 300000
     }
 
-    private static func getCredentials() -> Credentials? {
+    static func getCredentials() -> Credentials? {
+        // Return cached credentials if still valid (4-minute TTL)
+        if let cache = credentialCache, let expiry = cacheExpiry, Date() < expiry {
+            return cache
+        }
+
         // Use security command line tool (same as Python version)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
@@ -42,7 +50,11 @@ struct KeychainService {
             try process.run()
             process.waitUntilExit()
 
-            guard process.terminationStatus == 0 else { return nil }
+            guard process.terminationStatus == 0 else {
+                credentialCache = nil
+                cacheExpiry = nil
+                return nil
+            }
 
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             guard let jsonString = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -50,7 +62,10 @@ struct KeychainService {
                 return nil
             }
 
-            return try JSONDecoder().decode(Credentials.self, from: jsonData)
+            let credentials = try JSONDecoder().decode(Credentials.self, from: jsonData)
+            credentialCache = credentials
+            cacheExpiry = Date().addingTimeInterval(240) // 4-minute TTL
+            return credentials
         } catch {
             return nil
         }

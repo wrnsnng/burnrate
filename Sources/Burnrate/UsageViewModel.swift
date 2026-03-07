@@ -74,7 +74,6 @@ final class UsageViewModel {
 
     var menubarIcon: NSImage? {
         guard let limits = usageLimits else {
-            // Default icon when no data
             return MenubarIconRenderer.render(
                 fiveHour: 0,
                 sevenDay: 0,
@@ -142,6 +141,15 @@ final class UsageViewModel {
                 self.weekStats = week
                 self.isLoading = false
 
+                // Surface API/auth errors to UI
+                if limits == nil {
+                    if self.isTokenExpired {
+                        self.errorMessage = "Please log in: run 'claude' to authenticate"
+                    } else {
+                        self.errorMessage = "Unable to reach Anthropic API"
+                    }
+                }
+
                 // Check for alerts
                 if let limits = limits {
                     self.notificationService.checkAndNotify(
@@ -177,20 +185,126 @@ final class UsageViewModel {
     }
 
     func openSession(_ session: SessionInfo) {
-        let cmd = "cd \"\(session.projectPath)\" && claude --resume \(session.id)"
-        let script = "tell application \"Terminal\" to do script \"\(cmd)\""
+        runInTerminal("cd \"\(session.projectPath)\" && claude --resume \(session.id)")
+    }
 
-        if let appleScript = NSAppleScript(source: script) {
-            var error: NSDictionary?
-            appleScript.executeAndReturnError(&error)
-        }
+    func openActiveSession() {
+        guard let session = currentSession else { return }
+        if focusRunningClaudeTerminal() { return }
+        runInTerminal("cd \"\(session.projectPath)\" && claude --resume \(session.sessionId)")
     }
 
     func openClaude() {
-        let script = "tell application \"Terminal\" to do script \"claude\""
-        if let appleScript = NSAppleScript(source: script) {
-            var error: NSDictionary?
-            appleScript.executeAndReturnError(&error)
+        runInTerminal("claude")
+    }
+
+    // MARK: - Terminal Helpers
+
+    private func runInTerminal(_ cmd: String) {
+        let escapedCmd = cmd
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+
+        switch settingsService.preferredTerminal {
+        case .terminal:
+            let script = "tell application \"Terminal\" to do script \"\(escapedCmd)\""
+            runAppleScript(script)
+
+        case .iterm2:
+            let script = """
+            tell application "iTerm2"
+                create window with default profile command "\(escapedCmd)"
+            end tell
+            """
+            runAppleScript(script)
+
+        case .warp:
+            // Warp supports a URL scheme for running commands
+            let encoded = cmd.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+            if let url = URL(string: "warp://action/new_tab?command=\(encoded)") {
+                NSWorkspace.shared.open(url)
+            } else if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "dev.warp.Warp-Stable") {
+                NSWorkspace.shared.open(appURL)
+            }
+
+        case .ghostty:
+            // Ghostty accepts --command via CLI args
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+            process.arguments = ["-a", "Ghostty", "--args", "--command=bash", "-c", cmd]
+            try? process.run()
         }
+    }
+
+    private func runAppleScript(_ source: String) {
+        if let script = NSAppleScript(source: source) {
+            var error: NSDictionary?
+            script.executeAndReturnError(&error)
+            if let error = error {
+                NSLog("[Burnrate] AppleScript error: \(error)")
+            }
+        }
+    }
+
+    /// Tries to find and focus an already-running terminal that has a `claude` process.
+    /// Returns true if a terminal was successfully focused.
+    @discardableResult
+    private func focusRunningClaudeTerminal() -> Bool {
+        // Find claude PIDs via `ps aux`
+        let psProcess = Process()
+        psProcess.executableURL = URL(fileURLWithPath: "/bin/ps")
+        psProcess.arguments = ["aux"]
+        let psPipe = Pipe()
+        psProcess.standardOutput = psPipe
+        psProcess.standardError = FileHandle.nullDevice
+
+        do {
+            try psProcess.run()
+            psProcess.waitUntilExit()
+        } catch {
+            return false
+        }
+
+        let psData = psPipe.fileHandleForReading.readDataToEndOfFile()
+        guard let psOutput = String(data: psData, encoding: .utf8) else { return false }
+
+        // Find lines where the command column contains "claude" (but not this app or grep)
+        let claudeLine = psOutput.split(separator: "\n").first { line in
+            let parts = line.split(separator: " ", omittingEmptySubsequences: true)
+            guard parts.count > 10 else { return false }
+            let cmdPart = parts[10...].joined(separator: " ")
+            return cmdPart.contains("claude") && !cmdPart.contains("Burnrate") && !cmdPart.contains("grep")
+        }
+        guard let claudeLine = claudeLine else { return false }
+
+        let parts = claudeLine.split(separator: " ", omittingEmptySubsequences: true)
+        guard parts.count > 1, let claudePid = Int32(parts[1]) else { return false }
+
+        // Get parent PID
+        let ppidProcess = Process()
+        ppidProcess.executableURL = URL(fileURLWithPath: "/bin/ps")
+        ppidProcess.arguments = ["-o", "ppid=", "-p", "\(claudePid)"]
+        let ppidPipe = Pipe()
+        ppidProcess.standardOutput = ppidPipe
+        ppidProcess.standardError = FileHandle.nullDevice
+
+        do {
+            try ppidProcess.run()
+            ppidProcess.waitUntilExit()
+        } catch {
+            return false
+        }
+
+        let ppidData = ppidPipe.fileHandleForReading.readDataToEndOfFile()
+        guard let ppidString = String(data: ppidData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let ppid = Int32(ppidString) else { return false }
+
+        // Activate the parent process (the terminal)
+        if let app = NSRunningApplication(processIdentifier: ppid) {
+            app.activate()
+            return true
+        }
+
+        return false
     }
 }

@@ -286,13 +286,15 @@ struct SessionParser {
             }
         }
 
-        let fallbackDate = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date()
+        let modDate = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+        let fallbackDate = modDate ?? Date()
 
         return CurrentSession(
             sessionId: sessionId,
             slug: slug ?? String(sessionId.prefix(8)),
             projectPath: projectPath,
             startTime: startTime ?? fallbackDate,
+            lastModified: modDate,
             inputTokens: inputTokens,
             outputTokens: outputTokens,
             cacheReadTokens: cacheReadTokens,
