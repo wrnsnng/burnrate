@@ -16,6 +16,11 @@ struct SettingsView: View {
                     Label("Alerts", systemImage: "bell.badge.fill")
                 }
 
+            SyncSettingsTab(settingsService: settingsService)
+                .tabItem {
+                    Label("Sync", systemImage: "icloud.fill")
+                }
+
             AboutTab()
                 .tabItem {
                     Label("About", systemImage: "info.circle.fill")
@@ -44,6 +49,27 @@ struct GeneralSettingsTab: View {
                         isOn: $settingsService.launchAtStartup,
                         isDisabled: !settingsService.canUseLaunchAtLogin
                     )
+                }
+
+                // Menubar source section
+                SettingsSection(title: "Menubar source", icon: "square.stack.fill", iconColor: Color(hex: 0x3B82F6)) {
+                    VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
+                        // Source picker
+                        VStack(spacing: BurnrateTheme.spacingSM) {
+                            ForEach(MenubarSource.allCases) { source in
+                                MenubarSourceRow(
+                                    source: source,
+                                    isSelected: settingsService.menubarSource == source,
+                                    onSelect: { settingsService.menubarSource = source }
+                                )
+                            }
+                        }
+
+                        Text("Choose which service to display in the menubar.")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundStyle(BurnrateTheme.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 // Menubar display section
@@ -89,6 +115,77 @@ struct GeneralSettingsTab: View {
                 }
             }
             .padding(BurnrateTheme.spacingLG)
+        }
+    }
+}
+
+// MARK: - Menubar Source Row
+
+struct MenubarSourceRow: View {
+    let source: MenubarSource
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: BurnrateTheme.spacingMD) {
+                // Radio indicator
+                ZStack {
+                    Circle()
+                        .strokeBorder(isSelected ? Color.accentColor : BurnrateTheme.textTertiary, lineWidth: 1.5)
+                        .frame(width: 16, height: 16)
+
+                    if isSelected {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .frame(width: 8, height: 8)
+                    }
+                }
+
+                // Icon and label
+                HStack(spacing: BurnrateTheme.spacingSM) {
+                    BrandIcon(providerId: sourceProviderId, size: 11)
+                        .foregroundStyle(sourceColor)
+
+                    Text(source.rawValue)
+                        .font(.system(size: 13, weight: isSelected ? .medium : .regular))
+                        .foregroundStyle(isSelected ? BurnrateTheme.textPrimary : BurnrateTheme.textSecondary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, BurnrateTheme.spacingMD)
+            .padding(.vertical, BurnrateTheme.spacingSM)
+            .background(
+                RoundedRectangle(cornerRadius: BurnrateTheme.radiusSM)
+                    .fill(isHovered ? BurnrateTheme.cardBackgroundHover : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(BurnrateTheme.easeOut) {
+                isHovered = hovering
+            }
+        }
+    }
+
+    private var sourceProviderId: String {
+        switch source {
+        case .claude: return "claude"
+        case .codex: return "codex"
+        case .kimi: return "kimi"
+        case .gemini: return "gemini"
+        }
+    }
+
+    private var sourceColor: Color {
+        switch source {
+        case .claude: return Color(hex: 0xDA7756)
+        case .codex: return Color(hex: 0x10A37F)
+        case .kimi: return Color(hex: 0x6366F1)
+        case .gemini: return Color(hex: 0x4285F4)
         }
     }
 }
@@ -336,6 +433,13 @@ struct AlertsSettingsTab: View {
                                     isOn: $notificationService.sevenDayAlerts,
                                     isIndented: true
                                 )
+
+                                SettingsToggle(
+                                    title: "New cycle alerts",
+                                    subtitle: "Alert when usage resets",
+                                    isOn: $notificationService.cycleResetAlerts,
+                                    isIndented: true
+                                )
                             }
                         }
                     }
@@ -415,6 +519,69 @@ struct SettingsToggle: View {
                 .fill(BurnrateTheme.cardBackground)
         )
         .padding(.leading, isIndented ? BurnrateTheme.spacingLG : 0)
+    }
+}
+
+// MARK: - Sync Tab
+
+struct SyncSettingsTab: View {
+    @Bindable var settingsService: SettingsService
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: BurnrateTheme.spacingXL) {
+                SettingsSection(title: "Cloud sync", icon: "icloud.fill", iconColor: Color(hex: 0x3B82F6)) {
+                    VStack(alignment: .leading, spacing: BurnrateTheme.spacingMD) {
+                        SettingsToggle(
+                            title: "Sync usage to cloud",
+                            subtitle: "Enables the iOS widget to display your usage data",
+                            isOn: $settingsService.supabaseSyncEnabled
+                        )
+
+                        if settingsService.supabaseSyncEnabled {
+                            // User ID display
+                            VStack(alignment: .leading, spacing: BurnrateTheme.spacingSM) {
+                                Text("Your device ID")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(BurnrateTheme.textSecondary)
+
+                                HStack(spacing: BurnrateTheme.spacingSM) {
+                                    Text(settingsService.supabaseUserId)
+                                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                        .foregroundStyle(BurnrateTheme.textTertiary)
+                                        .textSelection(.enabled)
+                                        .lineLimit(1)
+
+                                    Spacer()
+
+                                    Button {
+                                        NSPasteboard.general.clearContents()
+                                        NSPasteboard.general.setString(settingsService.supabaseUserId, forType: .string)
+                                    } label: {
+                                        Image(systemName: "doc.on.doc")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundStyle(BurnrateTheme.textTertiary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(BurnrateTheme.spacingSM)
+                                .background(
+                                    RoundedRectangle(cornerRadius: BurnrateTheme.radiusSM)
+                                        .fill(BurnrateTheme.surfaceSecondary)
+                                )
+                            }
+                            .padding(.leading, BurnrateTheme.spacingLG)
+
+                            Text("This ID syncs via iCloud so the iOS widget can read your usage data. No account needed.")
+                                .font(.system(size: 11, weight: .regular))
+                                .foregroundStyle(BurnrateTheme.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+            .padding(BurnrateTheme.spacingLG)
+        }
     }
 }
 

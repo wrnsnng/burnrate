@@ -7,6 +7,21 @@ struct ContentView: View {
     let onShowSettings: () -> Void
 
     @State private var isRefreshing = false
+    @State private var expandedProviders: Set<String>
+
+    init(viewModel: UsageViewModel, onQuit: @escaping () -> Void, onShowAnalytics: @escaping () -> Void, onShowSettings: @escaping () -> Void) {
+        self.viewModel = viewModel
+        self.onQuit = onQuit
+        self.onShowAnalytics = onShowAnalytics
+        self.onShowSettings = onShowSettings
+
+        // Load persisted expansion state, default to all expanded
+        if let saved = UserDefaults.standard.array(forKey: "expandedProviders") as? [String] {
+            self._expandedProviders = State(initialValue: Set(saved))
+        } else {
+            self._expandedProviders = State(initialValue: Set<String>())
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,19 +42,27 @@ struct ContentView: View {
                         ErrorBanner(message: error)
                     }
 
-                    // Current Session
-                    CurrentSessionView(session: viewModel.currentSession)
-
-                    // Usage Limits
-                    UsageLimitsView(
-                        limits: viewModel.usageLimits,
-                        isTokenExpired: viewModel.isTokenExpired
+                    // Usage summary (quick glance across all LLMs)
+                    UsageSummaryView(
+                        providerInfos: viewModel.providerInfos,
+                        providerUsages: viewModel.providerUsages,
+                        isInstalled: { viewModel.providerIsInstalled($0) },
+                        hasTracking: { viewModel.providerHasTracking($0) }
                     )
 
-                    // Extra Usage (compact)
-                    ExtraUsageView(accountInfo: viewModel.accountInfo)
+                    // Expandable provider detail sections
+                    ForEach(viewModel.providerInfos, id: \.id) { info in
+                        ProviderUsageCard(
+                            providerInfo: info,
+                            usage: viewModel.providerUsages[info.id],
+                            isInstalled: viewModel.providerIsInstalled(info.id),
+                            hasTracking: viewModel.providerHasTracking(info.id),
+                            isExpanded: expandedBinding(for: info.id),
+                            extraContent: extraContent(for: info.id)
+                        )
+                    }
 
-                    // Recent Sessions
+                    // Recent Sessions (Claude)
                     RecentSessionsView(
                         sessions: viewModel.recentSessions,
                         onSessionTap: { session in
@@ -83,6 +106,63 @@ struct ContentView: View {
         }
         .frame(width: 340)
         .background(Color(NSColor.windowBackgroundColor))
+        .onChange(of: expandedProviders) { _, newValue in
+            UserDefaults.standard.set(Array(newValue), forKey: "expandedProviders")
+        }
+    }
+
+    private func expandedBinding(for id: String) -> Binding<Bool> {
+        Binding(
+            get: { expandedProviders.contains(id) },
+            set: { isExpanded in
+                if isExpanded {
+                    expandedProviders.insert(id)
+                } else {
+                    expandedProviders.remove(id)
+                }
+            }
+        )
+    }
+
+    /// Provides extra inline content for specific providers
+    private func extraContent(for providerId: String) -> AnyView? {
+        switch providerId {
+        case "claude":
+            var views: [AnyView] = []
+
+            // Active session card
+            views.append(AnyView(
+                CurrentSessionView(session: viewModel.currentSession)
+            ))
+
+            // Opus usage bar if active
+            if let limits = viewModel.usageLimits,
+               (limits.opusUtilization > 0 || limits.opusResetsAt != nil) {
+                views.append(AnyView(
+                    ProgressBarView(
+                        value: limits.opusUtilization,
+                        label: "Opus",
+                        resetsAt: limits.opusResetsAt
+                    )
+                ))
+            }
+
+            // Extra usage status
+            views.append(AnyView(
+                ExtraUsageView(accountInfo: viewModel.accountInfo)
+            ))
+
+            return AnyView(
+                VStack(spacing: BurnrateTheme.spacingXS) {
+                    ForEach(0..<views.count, id: \.self) { i in
+                        views[i]
+                    }
+                }
+            )
+
+        default:
+            return nil
+        }
     }
 }
 
@@ -235,6 +315,29 @@ struct FooterActionsView: View {
                 sevenDayResetsAt: Date().addingTimeInterval(86400 * 3),
                 opusUtilization: 0,
                 opusResetsAt: nil
+            )
+            vm.codexUsageLimits = CodexUsageLimits(
+                fiveHourUtilization: 25,
+                fiveHourResetsAt: Date().addingTimeInterval(7200),
+                weeklyUtilization: 45,
+                weeklyResetsAt: Date().addingTimeInterval(86400 * 5),
+                inputTokens: 10000,
+                outputTokens: 5000,
+                reasoningTokens: 2000
+            )
+            vm.providerUsages["claude"] = ProviderUsage(
+                primaryUtilization: 35, primaryLabel: "5-hour",
+                primaryResetsAt: Date().addingTimeInterval(3600),
+                secondaryUtilization: 72, secondaryLabel: "7-day",
+                secondaryResetsAt: Date().addingTimeInterval(86400 * 3),
+                extraInfo: nil
+            )
+            vm.providerUsages["codex"] = ProviderUsage(
+                primaryUtilization: 25, primaryLabel: "5-hour",
+                primaryResetsAt: Date().addingTimeInterval(7200),
+                secondaryUtilization: 45, secondaryLabel: "Weekly",
+                secondaryResetsAt: Date().addingTimeInterval(86400 * 5),
+                extraInfo: nil
             )
             vm.accountInfo = AccountInfo(hasExtraUsageEnabled: true, billingType: "pro", email: nil)
             vm.isTokenExpired = false

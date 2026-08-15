@@ -6,6 +6,8 @@ enum AlertType: String {
     case fiveHour90 = "5-hour usage at 90%"
     case sevenDay80 = "7-day usage at 80%"
     case sevenDay90 = "7-day usage at 90%"
+    case fiveHourReset = "5-hour cycle reset"
+    case sevenDayReset = "7-day cycle reset"
     case dailySummary = "Daily summary"
 }
 
@@ -23,6 +25,10 @@ final class NotificationService {
         didSet { UserDefaults.standard.set(sevenDayAlerts, forKey: "sevenDayAlerts") }
     }
 
+    var cycleResetAlerts: Bool {
+        didSet { UserDefaults.standard.set(cycleResetAlerts, forKey: "cycleResetAlerts") }
+    }
+
     private var lastAlertsSent: [AlertType: Date] = [:]
     private let alertCooldown: TimeInterval = 3600 // 1 hour between same alerts
 
@@ -30,6 +36,7 @@ final class NotificationService {
         self.alertsEnabled = UserDefaults.standard.object(forKey: "alertsEnabled") as? Bool ?? true
         self.fiveHourAlerts = UserDefaults.standard.object(forKey: "fiveHourAlerts") as? Bool ?? true
         self.sevenDayAlerts = UserDefaults.standard.object(forKey: "sevenDayAlerts") as? Bool ?? true
+        self.cycleResetAlerts = UserDefaults.standard.object(forKey: "cycleResetAlerts") as? Bool ?? true
     }
 
     func requestPermissions() {
@@ -68,6 +75,16 @@ final class NotificationService {
                 sendAlert(.sevenDay80, percentage: sevenDay)
             }
         }
+
+        // Check for cycle resets (usage dropped significantly, indicating a new cycle)
+        if cycleResetAlerts {
+            if let prev = previousFiveHour, prev >= 10 && fiveHour < 5 {
+                sendCycleResetAlert(.fiveHourReset)
+            }
+            if let prev = previousSevenDay, prev >= 10 && sevenDay < 5 {
+                sendCycleResetAlert(.sevenDayReset)
+            }
+        }
     }
 
     func sendDailySummary(fiveHour: Double, sevenDay: Double, tokensToday: Int, sessionsToday: Int) {
@@ -94,6 +111,41 @@ final class NotificationService {
         )
 
         UNUserNotificationCenter.current().add(request)
+    }
+
+    private func sendCycleResetAlert(_ type: AlertType) {
+        guard Bundle.main.bundleIdentifier != nil else {
+            NSLog("[Notifications] Would alert: \(type.rawValue)")
+            return
+        }
+
+        if let lastSent = lastAlertsSent[type],
+           Date().timeIntervalSince(lastSent) < alertCooldown {
+            return
+        }
+
+        let label = type == .fiveHourReset ? "5-hour" : "7-day"
+
+        let content = UNMutableNotificationContent()
+        content.title = "New \(label) cycle started"
+        content.body = "Your \(label) usage has reset. You have a fresh allowance."
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "\(type.rawValue)-\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil
+        )
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                NSLog("[Notifications] Failed to send: \(error)")
+            } else {
+                NSLog("[Notifications] Sent alert: \(type.rawValue)")
+            }
+        }
+
+        lastAlertsSent[type] = Date()
     }
 
     private func sendAlert(_ type: AlertType, percentage: Double) {

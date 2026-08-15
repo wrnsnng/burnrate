@@ -20,6 +20,10 @@ struct AlertSettingsView: View {
                     Toggle("7-day usage (80%, 90%)", isOn: $notificationService.sevenDayAlerts)
                         .toggleStyle(.switch)
                         .padding(.leading, 8)
+
+                    Toggle("New cycle started", isOn: $notificationService.cycleResetAlerts)
+                        .toggleStyle(.switch)
+                        .padding(.leading, 8)
                 }
                 .font(.subheadline)
             }

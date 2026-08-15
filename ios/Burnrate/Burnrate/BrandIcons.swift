@@ -1,0 +1,289 @@
+//
+//  BrandIcons.swift
+//  Burnrate
+//
+//  iOS port of the macOS brand icon system.
+//  SVG path data embedded from _assets/ originals, rendered as template images.
+//
+
+import SwiftUI
+
+struct BrandIcon: View {
+    let providerId: String
+    var size: CGFloat = 12
+
+    var body: some View {
+        Group {
+            if let image = Self.image(for: providerId) {
+                Image(uiImage: image)
+                    .renderingMode(.template)
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                Image(systemName: "questionmark.circle.fill")
+                    .font(.system(size: size * 0.7))
+            }
+        }
+        .frame(width: size, height: size)
+    }
+
+    // MARK: - Cached template images
+
+    private static let claudeImage  = makeTemplate(claudeSVG)
+    private static let openAIImage  = makeTemplate(openAISVG)
+    private static let kimiImage    = makeTemplate(kimiSVG_k)
+    private static let geminiImage  = makeTemplate(geminiSVG)
+
+    private static func image(for id: String) -> UIImage? {
+        switch id {
+        case "claude": return claudeImage
+        case "codex":  return openAIImage
+        case "kimi":   return kimiImage
+        case "gemini": return geminiImage
+        default:       return nil
+        }
+    }
+
+    private static func makeTemplate(_ svg: String) -> UIImage? {
+        // UIImage doesn't support SVG strings on iOS; we use shape-based rendering instead.
+        return nil
+    }
+
+    // MARK: - SVG Path Data
+
+    static let claudeSVG = "m7.75 26.27 7.77-4.36.13-.38-.13-.21h-.38l-1.3-.08-4.44-.12-3.85-.16-3.73-.2-.94-.2-.88-1.16.09-.58.79-.53 1.13.1 2.5.17 3.75.26 2.72.16 4.03.42h.64l.09-.26-.22-.16-.17-.16-3.88-2.63-4.2-2.78-2.2-1.6-1.19-.81-.6-.76-.26-1.66 1.08-1.19 1.45.1.37.1 1.47 1.13 3.14 2.43 4.1 3.02.6.5.24-.17.03-.12-.27-.45-2.23-4.03-2.38-4.1-1.06-1.7-.28-1.02c-.1-.42-.17-.77-.17-1.2l1.23-1.67.68-.22 1.64.22.69.6 1.02 2.33 1.65 3.67 2.56 4.99.75 1.48.4 1.37.15.42h.26v-.24l.21-2.81.39-3.45.38-4.44.13-1.25.62-1.5 1.23-.81.96.46.79 1.13-.11.73-.47 3.05-.92 4.78-.6 3.2h.35l.4-.4 1.62-2.15 2.72-3.4 1.2-1.35 1.4-1.49.9-.71h1.7l1.25 1.86-.56 1.92-1.75 2.22-1.45 1.88-2.08 2.8-1.3 2.24.12.18.31-.03 4.7-1 2.54-.46 3.03-.52 1.37.64.15.65-.54 1.33-3.24.8-3.8.76-5.66 1.34-.07.05.08.1 2.55.24 1.09.06h2.67l4.97.37 1.3.86.78 1.05-.13.8-2 1.02-2.7-.64-6.3-1.5-2.16-.54h-.3v.18l1.8 1.76 3.3 2.98 4.13 3.84.21.95-.53.75-.56-.08-3.63-2.73-1.4-1.23-3.17-2.67h-.21v.28l.73 1.07 3.86 5.8.2 1.78-.28.58-1 .35-1.1-.2-2.26-3.17-2.33-3.57-1.88-3.2-.23.13-1.11 11.95-.52.61-1.2.46-1-.76-.53-1.23.53-2.43.64-3.17.52-2.52.47-3.13.28-1.04-.02-.07-.23.03-2.36 3.24-3.59 4.85-2.84 3.04-.68.27-1.18-.61.11-1.09.66-.97 3.93-5 2.37-3.1 1.53-1.79-.01-.26h-.09l-10.44 6.78-1.86.24-.8-.75.1-1.23.38-.4 3.14-2.16z"
+
+    static let openAISVG = "M304.246 294.611V249.028C304.246 245.189 305.687 242.309 309.044 240.392L400.692 187.612C413.167 180.415 428.042 177.058 443.394 177.058C500.971 177.058 537.44 221.682 537.44 269.182C537.44 272.54 537.44 276.379 536.959 280.218L441.954 224.558C436.197 221.201 430.437 221.201 424.68 224.558L304.246 294.611ZM518.245 472.145V363.224C518.245 356.505 515.364 351.707 509.608 348.349L389.174 278.296L428.519 255.743C431.877 253.826 434.757 253.826 438.115 255.743L529.762 308.523C556.154 323.879 573.905 356.505 573.905 388.171C573.905 424.636 552.315 458.225 518.245 472.141V472.145ZM275.937 376.182L236.592 353.152C233.235 351.235 231.794 348.354 231.794 344.515V238.956C231.794 187.617 271.139 148.749 324.4 148.749C344.555 148.749 363.264 155.468 379.102 167.463L284.578 222.164C278.822 225.521 275.942 230.319 275.942 237.039V376.186L275.937 376.182ZM360.626 425.122L304.246 393.455V326.283L360.626 294.616L417.002 326.283V393.455L360.626 425.122ZM396.852 570.989C376.698 570.989 357.989 564.27 342.151 552.276L436.674 497.574C442.431 494.217 445.311 489.419 445.311 482.699V343.552L485.138 366.582C488.495 368.499 489.936 371.379 489.936 375.219V480.778C489.936 532.117 450.109 570.985 396.852 570.985V570.989ZM283.134 463.99L191.486 411.211C165.094 395.854 147.343 363.229 147.343 331.562C147.343 294.616 169.415 261.509 203.48 247.593V356.991C203.48 363.71 206.361 368.508 212.117 371.866L332.074 441.437L292.729 463.99C289.372 465.907 286.491 465.907 283.134 463.99ZM277.859 542.68C223.639 542.68 183.813 501.895 183.813 451.514C183.813 447.675 184.294 443.836 184.771 439.997L279.295 494.698C285.051 498.056 290.812 498.056 296.568 494.698L417.002 425.127V470.71C417.002 474.549 415.562 477.429 412.204 479.346L320.557 532.126C308.081 539.323 293.206 542.68 277.854 542.68H277.859ZM396.852 599.776C454.911 599.776 503.37 558.513 514.41 503.812C568.149 489.896 602.696 439.515 602.696 388.176C602.696 354.587 588.303 321.962 562.392 298.45C564.791 288.373 566.231 278.296 566.231 268.224C566.231 199.611 510.571 148.267 446.274 148.267C433.322 148.267 420.846 150.184 408.37 154.505C386.775 133.392 357.026 119.958 324.4 119.958C266.342 119.958 217.883 161.22 206.843 215.921C153.104 229.837 118.557 280.218 118.557 331.557C118.557 365.146 132.95 397.771 158.861 421.283C156.462 431.36 155.022 441.437 155.022 451.51C155.022 520.123 210.682 571.466 274.978 571.466C287.931 571.466 300.407 569.549 312.883 565.228C334.473 586.341 364.222 599.776 396.852 599.776Z"
+
+    static let kimiSVG_dot = "M342.065 189.759c1.886-2.42 3.541-4.63 5.289-6.77.81-1.007.74-1.771-.046-2.824-7.58-9.965-8.298-21.028-3.935-32.254 3.275-8.448 10.52-12.406 19.373-13.25 5.52-.521 10.936.046 15.959 2.73 6.596 3.53 10.438 8.912 11.688 16.341.995 5.926.81 11.712-.868 17.452-2.974 10.161-10.277 15.427-20.287 16.758-8.31 1.11-16.734 1.25-25.113 1.817-.648.046-1.308 0-2.06 0z"
+    static let kimiSVG_k = "M321.512 144.254h-50.064l-39.637 90.384h-56.036v-89.99H131v232.868h44.787v-98.103h78.973c13.598 0 26.015-7.927 31.744-20.252v118.355h44.787v-98.103c0-23.342-18.239-42.97-41.523-44.671v-.116h-24.593a45.577 45.577 0 0026.884-24.534l29.453-65.838z"
+
+    static let geminiSVG = "M28.5349 14.3023C26.1183 13.2736 23.921 11.7918 22.0616 9.9369C19.4722 7.34227 17.6248 4.10154 16.7114 0.551451C16.6713 0.393777 16.5799 0.253956 16.4514 0.154088C16.323 0.0542192 16.165 0 16.0023 0C15.8396 0 15.6815 0.0542192 15.5531 0.154088C15.4247 0.253956 15.3332 0.393777 15.2931 0.551451C14.3778 4.10108 12.5301 7.34144 9.94144 9.9369C8.08186 11.7916 5.88462 13.2733 3.46822 14.3023C2.52269 14.7096 1.55098 15.0369 0.555996 15.2886C0.397354 15.3276 0.256364 15.4186 0.15557 15.5472C0.0547764 15.6757 0 15.8344 0 15.9977C0 16.1611 0.0547764 16.3197 0.15557 16.4483C0.256364 16.5768 0.397354 16.6679 0.555996 16.7069C1.55098 16.9571 2.51978 17.2844 3.46822 17.6917C5.88476 18.7204 8.08204 20.2022 9.94144 22.0571C12.5316 24.652 14.3795 27.8933 15.2931 31.444C15.3321 31.6026 15.4232 31.7436 15.5517 31.8444C15.6803 31.9452 15.8389 32 16.0023 32C16.1656 32 16.3243 31.9452 16.4528 31.8444C16.5814 31.7436 16.6724 31.6026 16.7114 31.444C16.9616 30.4476 17.2889 29.4788 17.6962 28.5303C18.7249 26.1137 20.2067 23.9165 22.0616 22.0571C24.6568 19.4675 27.898 17.6201 31.4485 16.7069C31.6062 16.6668 31.746 16.5753 31.8459 16.4469C31.9458 16.3185 32 16.1604 32 15.9977C32 15.835 31.9458 15.677 31.8459 15.5486C31.746 15.4201 31.6062 15.3287 31.4485 15.2886C30.4526 15.038 29.4783 14.7082 28.5349 14.3023Z"
+}
+
+// MARK: - SVG Shape Rendering
+
+/// Renders an SVG path string as a SwiftUI Shape using Core Graphics.
+private struct SVGPathShape: Shape {
+    let pathData: String
+    let viewBox: CGRect
+
+    func path(in rect: CGRect) -> Path {
+        let svgPath = parseSVGPath(pathData)
+        let bounds = viewBox
+
+        // Scale to fit the target rect
+        let scaleX = rect.width / bounds.width
+        let scaleY = rect.height / bounds.height
+        let scale = min(scaleX, scaleY)
+
+        let offsetX = (rect.width - bounds.width * scale) / 2 - bounds.minX * scale
+        let offsetY = (rect.height - bounds.height * scale) / 2 - bounds.minY * scale
+
+        let transform = CGAffineTransform(translationX: offsetX, y: offsetY)
+            .scaledBy(x: scale, y: scale)
+
+        return svgPath.applying(transform)
+    }
+
+    // Minimal SVG path parser supporting M, L, C, Z, H, V and lowercase variants
+    private func parseSVGPath(_ d: String) -> Path {
+        var path = Path()
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var startX: CGFloat = 0
+        var startY: CGFloat = 0
+
+        let tokens = tokenize(d)
+        var i = 0
+
+        func nextNum() -> CGFloat {
+            guard i < tokens.count else { return 0 }
+            let val = CGFloat(Double(tokens[i]) ?? 0)
+            i += 1
+            return val
+        }
+
+        var lastCommand: Character = "M"
+
+        while i < tokens.count {
+            let token = tokens[i]
+            var cmd: Character
+
+            if let first = token.first, first.isLetter {
+                cmd = first
+                i += 1
+            } else {
+                // Implicit repeat of last command
+                cmd = lastCommand
+                // After M, implicit repeats are L
+                if cmd == "M" { cmd = "L" }
+                if cmd == "m" { cmd = "l" }
+            }
+
+            lastCommand = cmd
+
+            switch cmd {
+            case "M":
+                currentX = nextNum(); currentY = nextNum()
+                path.move(to: CGPoint(x: currentX, y: currentY))
+                startX = currentX; startY = currentY
+                // Subsequent coordinates are implicit lineTo
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentX = nextNum(); currentY = nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "m":
+                currentX += nextNum(); currentY += nextNum()
+                path.move(to: CGPoint(x: currentX, y: currentY))
+                startX = currentX; startY = currentY
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentX += nextNum(); currentY += nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "L":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentX = nextNum(); currentY = nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "l":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentX += nextNum(); currentY += nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "H":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentX = nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "h":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentX += nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "V":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentY = nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "v":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    currentY += nextNum()
+                    path.addLine(to: CGPoint(x: currentX, y: currentY))
+                }
+            case "C":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    let x1 = nextNum(), y1 = nextNum()
+                    let x2 = nextNum(), y2 = nextNum()
+                    currentX = nextNum(); currentY = nextNum()
+                    path.addCurve(
+                        to: CGPoint(x: currentX, y: currentY),
+                        control1: CGPoint(x: x1, y: y1),
+                        control2: CGPoint(x: x2, y: y2)
+                    )
+                }
+            case "c":
+                while i < tokens.count, let _ = Double(tokens[i]) {
+                    let dx1 = nextNum(), dy1 = nextNum()
+                    let dx2 = nextNum(), dy2 = nextNum()
+                    let dx = nextNum(), dy = nextNum()
+                    path.addCurve(
+                        to: CGPoint(x: currentX + dx, y: currentY + dy),
+                        control1: CGPoint(x: currentX + dx1, y: currentY + dy1),
+                        control2: CGPoint(x: currentX + dx2, y: currentY + dy2)
+                    )
+                    currentX += dx; currentY += dy
+                }
+            case "Z", "z":
+                path.closeSubpath()
+                currentX = startX; currentY = startY
+            default:
+                i += 1
+            }
+        }
+
+        return path
+    }
+
+    private func tokenize(_ d: String) -> [String] {
+        var tokens: [String] = []
+        var current = ""
+        var lastWasE = false
+
+        for char in d {
+            if char.isLetter && char != "e" && char != "E" {
+                if !current.isEmpty {
+                    tokens.append(current)
+                    current = ""
+                }
+                tokens.append(String(char))
+                lastWasE = false
+            } else if char == "," || char == " " || char == "\t" || char == "\n" {
+                if !current.isEmpty {
+                    tokens.append(current)
+                    current = ""
+                }
+                lastWasE = false
+            } else if char == "-" && !current.isEmpty && !lastWasE {
+                tokens.append(current)
+                current = String(char)
+                lastWasE = false
+            } else {
+                current.append(char)
+                lastWasE = (char == "e" || char == "E")
+            }
+        }
+        if !current.isEmpty { tokens.append(current) }
+        return tokens
+    }
+}
+
+// MARK: - Shape-based BrandIcon Views
+
+extension BrandIcon {
+    /// Creates the appropriate shape view for a provider
+    @ViewBuilder
+    static func shapeView(for providerId: String, size: CGFloat) -> some View {
+        switch providerId.lowercased() {
+        case "claude":
+            SVGPathShape(
+                pathData: claudeSVG,
+                viewBox: CGRect(x: 0, y: -0.01, width: 39.5, height: 39.53)
+            )
+            .frame(width: size, height: size)
+
+        case "codex":
+            SVGPathShape(
+                pathData: openAISVG,
+                viewBox: CGRect(x: 118.5, y: 119.9, width: 484.2, height: 479.9)
+            )
+            .frame(width: size, height: size)
+
+        case "kimi":
+            ZStack {
+                SVGPathShape(
+                    pathData: kimiSVG_k,
+                    viewBox: CGRect(x: 121, y: 124, width: 280, height: 260)
+                )
+                SVGPathShape(
+                    pathData: kimiSVG_dot,
+                    viewBox: CGRect(x: 121, y: 124, width: 280, height: 260)
+                )
+            }
+            .frame(width: size, height: size)
+
+        case "gemini":
+            SVGPathShape(
+                pathData: geminiSVG,
+                viewBox: CGRect(x: 0, y: 0, width: 32, height: 32)
+            )
+            .frame(width: size, height: size)
+
+        default:
+            Image(systemName: "cpu")
+                .font(.system(size: size * 0.7))
+                .frame(width: size, height: size)
+        }
+    }
+}

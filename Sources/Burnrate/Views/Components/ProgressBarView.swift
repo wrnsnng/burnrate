@@ -79,9 +79,15 @@ struct ProgressBarView: View {
                             .foregroundStyle(BurnrateTheme.textTertiary)
                     }
                 } else {
-                    Text("Resets \(formatTimeRemaining(resetsAt))")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(BurnrateTheme.textTertiary)
+                    HStack(spacing: BurnrateTheme.spacingXS) {
+                        Text("Resets \(formatTimeRemaining(resetsAt))")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(BurnrateTheme.textTertiary)
+
+                        Text("(\(formatLocalTime(resetsAt)))")
+                            .font(.system(size: 10, weight: .regular))
+                            .foregroundStyle(BurnrateTheme.textTertiary.opacity(0.7))
+                    }
                 }
             }
         }
@@ -126,6 +132,21 @@ struct ProgressBarView: View {
         } else {
             return "in \(minutes)m"
         }
+    }
+
+    private func formatLocalTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+
+        if calendar.isDateInToday(date) {
+            formatter.dateFormat = "h:mm a"
+        } else if calendar.isDateInTomorrow(date) {
+            formatter.dateFormat = "'Tomorrow' h:mm a"
+        } else {
+            formatter.dateFormat = "EEE h:mm a"
+        }
+
+        return formatter.string(from: date)
     }
 }
 
